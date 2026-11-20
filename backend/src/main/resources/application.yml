@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: smart-waste-dashboard
+
+  profiles:
+    # "demo" = in-memory H2 database + simulated LoRa sensors (runs anywhere, no AWS needed)
+    # "prod" = real PostgreSQL (AWS RDS) fed by the AWS IoT pipeline
+    active: ${SPRING_PROFILES_ACTIVE:demo}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+
+server:
+  port: ${PORT:8080}
+
+jwt:
+  # Must be set through the JWT_SECRET environment variable in production (min. 32 characters)
+  secret: ${JWT_SECRET:dev-only-secret-change-me-dev-only-secret-change-me}
+  expiration: 86400000
+
+app:
+  name: Smart Waste Dashboard
+  version: 1.0.0
+  # Initial accounts, created only if they don't exist yet
+  admin-password: ${ADMIN_PASSWORD:admin123}
+  manager-password: ${MANAGER_PASSWORD:manager123}
+  # Shared key the IoT gateway / ingestion pipeline must send in the X-API-Key header
+  iot-api-key: ${IOT_API_KEY:dev-iot-key}
+
+logging:
+  level:
+    com.smartwaste: INFO
+
+---
+spring:
+  config:
+    activate:
+      on-profile: demo
+  datasource:
+    url: jdbc:h2:mem:smartwaste;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  h2:
+    console:
+      enabled: false
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      data-source-properties:
+        sslmode: require
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect

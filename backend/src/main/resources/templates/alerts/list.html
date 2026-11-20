@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alertes - Smart Waste</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h2 class="mb-4">Alertes Actives</h2>
+        
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${alerts.isEmpty()}" class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aucune alerte active pour le moment.
+                </div>
+                
+                <div th:if="${!alerts.isEmpty()}">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Conteneur</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Remplissage</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="alert : ${alerts}">
+                                <td th:text="${alert.container.name}"></td>
+                                <td>
+                                    <span class="badge bg-danger" th:text="${alert.type}"></span>
+                                </td>
+                                <td th:text="${alert.message}"></td>
+                                <td>
+                                    <span th:text="${#numbers.formatDecimal(alert.fillPercentage, 1, 1)} + '%'"></span>
+                                </td>
+                                <td th:text="${#temporals.format(alert.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                                <td>
+                                    <form th:action="@{/alerts/{id}/resolve(id=${alert.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success">
+                                            <i class="bi bi-check-circle"></i> Résoudre
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

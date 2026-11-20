@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="420" viewBox="0 0 1000 420" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#94a3b8"/></marker>
+  </defs>
+  <rect width="1000" height="420" rx="16" fill="#ffffff"/>
+  <rect x="1" y="1" width="998" height="418" rx="16" fill="none" stroke="#e2e8f0"/>
+
+  <!-- zone labels -->
+  <text x="40" y="38" font-size="13" font-weight="700" fill="#2e7d32" letter-spacing="1">FIELD (EDGE)</text>
+  <text x="372" y="38" font-size="13" font-weight="700" fill="#1565c0" letter-spacing="1">CLOUD (AWS)</text>
+  <text x="700" y="38" font-size="13" font-weight="700" fill="#6d28d9" letter-spacing="1">APPLICATIONS</text>
+  <line x1="350" y1="25" x2="350" y2="395" stroke="#e2e8f0" stroke-dasharray="6 6"/>
+  <line x1="680" y1="25" x2="680" y2="395" stroke="#e2e8f0" stroke-dasharray="6 6"/>
+
+  <!-- sensor node -->
+  <rect x="30" y="60" width="290" height="110" rx="12" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="48" y="88" font-size="16" font-weight="700" fill="#1b5e20">Sensor node (in the bin)</text>
+  <text x="48" y="112" font-size="13" fill="#334155">Arduino + ultrasonic sensor + GPS</text>
+  <text x="48" y="132" font-size="13" fill="#334155">fill % from distance to the waste</text>
+  <text x="48" y="154" font-size="12" fill="#64748b" font-family="Consolas, monospace">"1,45,16.5,34.0042,-4.9918"</text>
+
+  <!-- LoRa link -->
+  <line x1="175" y1="172" x2="175" y2="238" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <text x="185" y="210" font-size="13" font-weight="600" fill="#475569">LoRa 433 MHz (SF7)</text>
+
+  <!-- gateway -->
+  <rect x="30" y="242" width="290" height="110" rx="12" fill="#e8f5e9" stroke="#2e7d32"/>
+  <text x="48" y="270" font-size="16" font-weight="700" fill="#1b5e20">Gateway</text>
+  <text x="48" y="294" font-size="13" fill="#334155">Heltec WiFi LoRa 32 V3 (SX1262)</text>
+  <text x="48" y="314" font-size="13" fill="#334155">adds RSSI / SNR, publishes JSON</text>
+  <text x="48" y="336" font-size="12" fill="#64748b">X.509 device certificate (mutual TLS)</text>
+
+  <!-- MQTT -->
+  <line x1="322" y1="297" x2="368" y2="297" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+  <text x="345" y="283" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">MQTT</text><text x="345" y="318" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">TLS</text>
+
+  <!-- AWS IoT -->
+  <rect x="370" y="242" width="290" height="110" rx="12" fill="#e3f2fd" stroke="#1565c0"/>
+  <text x="388" y="270" font-size="16" font-weight="700" fill="#0d47a1">AWS IoT Core</text>
+  <text x="388" y="294" font-size="13" fill="#334155">topic: smartbin/data (port 8883)</text>
+  <text x="388" y="314" font-size="13" fill="#334155">forwards each reading to the DB</text>
+
+  <line x1="515" y1="240" x2="515" y2="174" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- RDS -->
+  <rect x="370" y="60" width="290" height="110" rx="12" fill="#e3f2fd" stroke="#1565c0"/>
+  <text x="388" y="88" font-size="16" font-weight="700" fill="#0d47a1">PostgreSQL (AWS RDS)</text>
+  <text x="388" y="112" font-size="13" fill="#334155">sensor_data → final_stats</text>
+  <text x="388" y="132" font-size="13" fill="#334155">containers · alerts · users</text>
+  <text x="388" y="154" font-size="13" fill="#334155">login_history (audit)</text>
+
+  <line x1="662" y1="115" x2="698" y2="115" stroke="#475569" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- Spring Boot -->
+  <rect x="700" y="60" width="270" height="130" rx="12" fill="#f3e8ff" stroke="#6d28d9"/>
+  <text x="718" y="88" font-size="16" font-weight="700" fill="#4c1d95">Spring Boot backend</text>
+  <text x="718" y="112" font-size="13" fill="#334155">IoT sync every 5 s · auto alerts</text>
+  <text x="718" y="132" font-size="13" fill="#334155">Thymeleaf dashboard (session + CSRF)</text>
+  <text x="718" y="152" font-size="13" fill="#334155">REST API for mobile (JWT)</text>
+  <text x="718" y="172" font-size="13" fill="#334155">PDF / CSV reports</text>
+
+  <line x1="835" y1="192" x2="835" y2="238" stroke="#475569" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="845" y="220" font-size="12" font-weight="600" fill="#475569">HTTPS + JWT</text>
+
+  <!-- Mobile -->
+  <rect x="700" y="242" width="270" height="110" rx="12" fill="#f3e8ff" stroke="#6d28d9"/>
+  <text x="718" y="270" font-size="16" font-weight="700" fill="#4c1d95">Mobile app (Expo)</text>
+  <text x="718" y="294" font-size="13" fill="#334155">nearest non-full bin (GPS)</text>
+  <text x="718" y="314" font-size="13" fill="#334155">map · list · stats by region</text>
+  <text x="718" y="334" font-size="13" fill="#334155">Android · iOS · web</text>
+
+  <!-- demo path -->
+  <text x="40" y="392" font-size="12" fill="#64748b">Demo mode: a built-in simulator replays the sensor node + gateway payload, so the whole chain runs on a laptop without hardware or AWS.</text>
+</svg>

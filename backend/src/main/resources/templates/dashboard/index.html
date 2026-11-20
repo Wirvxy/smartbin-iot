@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart Waste</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            border-radius: 0.5rem;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: #fff;
+            background-color: rgba(255,255,255,0.1);
+        }
+        .main-content {
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .card-stat {
+            border-left: 4px solid;
+        }
+        .card-stat.primary { border-left-color: #0d6efd; }
+        .card-stat.success { border-left-color: #198754; }
+        .card-stat.warning { border-left-color: #ffc107; }
+        .card-stat.danger { border-left-color: #dc3545; }
+        #map { height: 400px; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-md-3 col-lg-2 sidebar p-3">
+                <div class="text-white mb-4">
+                    <h4><i class="bi bi-trash3"></i> Smart Waste</h4>
+                </div>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" th:href="@{/dashboard}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/containers}">
+                            <i class="bi bi-box-seam"></i> Conteneurs
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link" th:href="@{/admin/users}">
+                            <i class="bi bi-people"></i> Utilisateurs
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/reports}">
+                            <i class="bi bi-file-earmark-text"></i> Rapports
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/alerts}">
+                            <i class="bi bi-bell"></i> Alertes
+                        </a>
+                    </li>
+                </ul>
+                <div class="mt-auto pt-3">
+                    <div class="text-white-50 small mb-2" sec:authentication="name"></div>
+                    <a class="nav-link text-danger" th:href="@{/logout}">
+                        <i class="bi bi-box-arrow-right"></i> Déconnexion
+                    </a>
+                </div>
+            </nav>
+            
+            <!-- Main Content -->
+            <main class="col-md-9 col-lg-10 ms-sm-auto main-content p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>Tableau de bord</h2>
+                </div>
+                
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat primary">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Conteneurs</h6>
+                                <h2 th:text="${stats.totalContainers}">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat success">
+                            <div class="card-body">
+                                <h6 class="text-muted">Conteneurs Actifs</h6>
+                                <h2 th:text="${stats.activeContainers}">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat warning">
+                            <div class="card-body">
+                                <h6 class="text-muted">Taux de Remplissage Moyen</h6>
+                                <h2 th:text="${#numbers.formatDecimal(stats.averageFillPercentage, 1, 1)} + '%'">0%</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card card-stat danger">
+                            <div class="card-body">
+                                <h6 class="text-muted">Alertes Actives</h6>
+                                <h2 th:text="${stats.alertContainers}">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Remplissage par conteneur</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="fillTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Répartition par Statut</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Map -->
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Carte Interactive des Conteneurs</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="map"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script th:inline="javascript">
+        // Initialize map (Morocco only)
+        // Approximate bounding box for Morocco (incl. Western Sahara)
+        const moroccoBounds = L.latLngBounds(
+            [20.5, -17.6], // South-West
+            [36.2, -0.9]   // North-East
+        );
+
+        const map = L.map('map', {
+            maxBounds: moroccoBounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 5,
+            maxZoom: 18
+        });
+        map.fitBounds(moroccoBounds);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        
+        // Load containers and add markers
+        fetch('/dashboard/data/containers')
+            .then(response => response.json())
+            .then(containers => {
+                containers.forEach(container => {
+                    const color = container.fillPercentage >= container.alertThreshold ? 'red' :
+                                 container.fillPercentage >= 60 ? 'orange' : 'green';
+                    
+                    const marker = L.marker([container.latitude, container.longitude])
+                        .addTo(map)
+                        .bindPopup(`
+                            <b>${container.name}</b><br>
+                            ID: ${container.containerId}<br>
+                            Remplissage: ${container.fillPercentage.toFixed(1)}%<br>
+                            Statut: ${container.status}
+                        `);
+                    
+                    marker.setIcon(L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
+                        iconSize: [20, 20]
+                    }));
+                });
+            });
+        
+        // Fill level of each container (real data, refreshed with the map data)
+        const fillCtx = document.getElementById('fillTrendChart').getContext('2d');
+        const fillChart = new Chart(fillCtx, {
+            type: 'bar',
+            data: { labels: [], datasets: [{ label: 'Remplissage (%)', data: [], backgroundColor: [] }] },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: { y: { beginAtZero: true, max: 100 } }
+            }
+        });
+        fetch('/dashboard/data/containers')
+            .then(response => response.json())
+            .then(containers => {
+                fillChart.data.labels = containers.map(c => c.containerId);
+                fillChart.data.datasets[0].data = containers.map(c => Math.round(c.fillPercentage));
+                fillChart.data.datasets[0].backgroundColor = containers.map(c =>
+                    c.fillPercentage >= c.alertThreshold ? 'rgb(220, 53, 69)' :
+                    c.fillPercentage >= 60 ? 'rgb(255, 193, 7)' : 'rgb(25, 135, 84)');
+                fillChart.update();
+            });
+        
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        const activeContainers = /*[[${stats.activeContainers}]]*/ 0;
+        const fullContainers = /*[[${stats.fullContainers}]]*/ 0;
+        const maintenanceContainers = /*[[${stats.maintenanceContainers}]]*/ 0;
+        const inactiveContainers = /*[[${stats.inactiveContainers}]]*/ 0;
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Actif', 'Plein', 'Maintenance', 'Inactif'],
+                datasets: [{
+                    data: [
+                        activeContainers,
+                        fullContainers,
+                        maintenanceContainers,
+                        inactiveContainers
+                    ],
+                    backgroundColor: [
+                        'rgb(75, 192, 192)',
+                        'rgb(255, 99, 132)',
+                        'rgb(255, 205, 86)',
+                        'rgb(201, 203, 207)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+        
+        // Real-time updates
+        setInterval(() => {
+            fetch('/dashboard/data/stats')
+                .then(response => response.json())
+                .then(stats => {
+                    document.querySelector('.card-stat.primary h2').textContent = stats.totalContainers;
+                    document.querySelector('.card-stat.success h2').textContent = stats.activeContainers;
+                    document.querySelector('.card-stat.warning h2').textContent = stats.averageFillPercentage.toFixed(1) + '%';
+                    document.querySelector('.card-stat.danger h2').textContent = stats.alertContainers;
+                });
+        }, 30000); // Update every 30 seconds
+    </script>
+</body>
+</html>

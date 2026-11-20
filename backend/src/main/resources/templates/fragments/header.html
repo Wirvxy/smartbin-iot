@@ -1,0 +1,11 @@
+<div th:fragment="header">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 th:text="${pageTitle != null ? pageTitle : 'Dashboard'}">Dashboard</h2>
+        <div class="d-flex gap-2">
+            <span class="badge bg-primary" id="notification-badge" style="display: none;">0</span>
+            <button class="btn btn-outline-secondary" id="notification-btn">
+                <i class="bi bi-bell"></i>
+            </button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${container.id != null ? 'Modifier' : 'Créer'} + ' Conteneur - Smart Waste'">Smart Waste</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 th:text="${container.id != null ? 'Modifier le conteneur' : 'Créer un nouveau conteneur'}"></h4>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="${container.id != null ? '/containers/edit/' + container.id : '/containers/create'}" 
+                              th:object="${container}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">ID Conteneur</label>
+                                <input type="text" class="form-control" th:field="*{containerId}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nom</label>
+                                <input type="text" class="form-control" th:field="*{name}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" th:field="*{description}" rows="3"></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Latitude</label>
+                                    <input type="number" step="any" class="form-control" th:field="*{latitude}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Longitude</label>
+                                    <input type="number" step="any" class="form-control" th:field="*{longitude}" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Adresse</label>
+                                <input type="text" class="form-control" th:field="*{address}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Région</label>
+                                <input type="text" class="form-control" th:field="*{region}" required>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Capacité (litres)</label>
+                                    <input type="number" step="any" class="form-control" th:field="*{capacity}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Niveau actuel (litres)</label>
+                                    <input type="number" step="any" class="form-control" th:field="*{currentLevel}">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Seuil d'alerte (%)</label>
+                                <input type="number" step="any" class="form-control" th:field="*{alertThreshold}" 
+                                       min="0" max="100" value="80">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Statut</label>
+                                <select class="form-select" th:field="*{status}">
+                                    <option value="ACTIVE">Actif</option>
+                                    <option value="INACTIVE">Inactif</option>
+                                    <option value="MAINTENANCE">Maintenance</option>
+                                    <option value="FULL">Plein</option>
+                                </select>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <a th:href="@{/containers}" class="btn btn-secondary">Annuler</a>
+                                <button type="submit" class="btn btn-primary">Enregistrer</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
