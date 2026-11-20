@@ -1,190 +1,80 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, Platform, ScrollView } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 import { useRegion } from '../context/RegionContext';
-import { COLORS } from '../utils/constants';
+import { useLocation } from '../context/LocationContext';
+import { DEMO_MODE } from '../utils/constants';
+import { C, F, R } from '../theme';
+import { Button } from '../components/ui';
+
+const ROLES = { admin: 'Administrateur', ADMIN: 'Administrateur', manager: 'Gestionnaire', MANAGER: 'Gestionnaire', EMPLOYEE: 'Agent', agent: 'Agent' };
 
 export default function ProfileScreen({ navigation }) {
   const { user, logout } = useAuth();
   const { selectedRegion } = useRegion();
+  const { simulated, refreshLocation } = useLocation();
 
   function handleLogout() {
-    Alert.alert(
-      'Déconnexion',
-      'Êtes-vous sûr de vouloir vous déconnecter ?',
-      [
-        { text: 'Annuler', style: 'cancel' },
-        {
-          text: 'Se déconnecter',
-          style: 'destructive',
-          onPress: logout,
-        },
-      ]
-    );
+    if (Platform.OS === 'web') {
+      if (window.confirm('Se déconnecter de SmartBin ?')) logout();
+      return;
+    }
+    Alert.alert('Se déconnecter', 'Se déconnecter de SmartBin ?', [
+      { text: 'Annuler', style: 'cancel' },
+      { text: 'Se déconnecter', style: 'destructive', onPress: logout },
+    ]);
   }
 
   return (
-    <View style={styles.container}>
-      {/* Profil utilisateur */}
-      <View style={styles.profileCard}>
+    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <View style={styles.person}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-          </Text>
+          <Text style={styles.avatarText}>{(user?.name || 'U').charAt(0).toUpperCase()}</Text>
         </View>
-        <Text style={styles.userName}>{user?.name || 'Utilisateur'}</Text>
-        <Text style={styles.userEmail}>{user?.email || ''}</Text>
-      </View>
-
-      {/* Paramètres */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Paramètres</Text>
-
-        <TouchableOpacity
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('RegionSelect')}
-        >
-          <Text style={styles.menuIcon}>📍</Text>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuLabel}>Région actuelle</Text>
-            <Text style={styles.menuValue}>
-              {selectedRegion?.name || 'Non sélectionnée'}
-            </Text>
-          </View>
-          <Text style={styles.menuArrow}>›</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Informations */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Informations</Text>
-
-        <View style={styles.menuItem}>
-          <Text style={styles.menuIcon}>ℹ️</Text>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuLabel}>Version</Text>
-            <Text style={styles.menuValue}>1.0.0</Text>
-          </View>
-        </View>
-
-        <View style={styles.menuItem}>
-          <Text style={styles.menuIcon}>♻️</Text>
-          <View style={styles.menuContent}>
-            <Text style={styles.menuLabel}>Application</Text>
-            <Text style={styles.menuValue}>SmartWaste - Gestion IoT</Text>
-          </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.name}>{user?.name || 'Utilisateur'}</Text>
+          <Text style={styles.small}>{[user?.email, ROLES[user?.role]].filter(Boolean).join(', ')}</Text>
         </View>
       </View>
 
-      {/* Déconnexion */}
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Se déconnecter</Text>
-      </TouchableOpacity>
-    </View>
+      <View style={styles.list}>
+        <Row label="Quartier" value={selectedRegion?.name ?? 'Toute la ville'} onPress={() => navigation.navigate('RegionSelect')} />
+        <Row label="Position" value={simulated ? 'Simulée, centre de Fès' : 'GPS du téléphone'} onPress={refreshLocation} action="Actualiser" />
+        <Row label="Données" value={DEMO_MODE ? 'Démo, 10 bacs fictifs à Fès' : 'Serveur SmartBin en direct'} />
+        <Row label="Version" value="1.1.0" last />
+      </View>
+
+      <Button title="Se déconnecter" variant="ghost" onPress={handleLogout} style={{ marginTop: 24 }} />
+    </ScrollView>
   );
 }
 
+function Row({ label, value, onPress, action, last }) {
+  const content = (
+    <>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.small}>{label}</Text>
+        <Text style={styles.value}>{value}</Text>
+      </View>
+      {onPress && <Text style={styles.action}>{action || 'Changer'}</Text>}
+    </>
+  );
+  const style = [styles.row, !last && styles.rowBorder];
+  return onPress
+    ? <Pressable onPress={onPress} accessibilityRole="button" style={({ pressed }) => [...style, pressed && { backgroundColor: C.surface2 }]}>{content}</Pressable>
+    : <View style={style}>{content}</View>;
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  profileCard: {
-    backgroundColor: COLORS.primary,
-    padding: 30,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: COLORS.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  avatarText: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  userName: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.white,
-  },
-  userEmail: {
-    fontSize: 14,
-    color: COLORS.white,
-    opacity: 0.85,
-    marginTop: 4,
-  },
-  section: {
-    backgroundColor: COLORS.surface,
-    margin: 16,
-    marginBottom: 0,
-    borderRadius: 16,
-    padding: 16,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.textSecondary,
-    textTransform: 'uppercase',
-    marginBottom: 12,
-    letterSpacing: 0.5,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGrey,
-  },
-  menuIcon: {
-    fontSize: 20,
-    marginRight: 12,
-  },
-  menuContent: {
-    flex: 1,
-  },
-  menuLabel: {
-    fontSize: 15,
-    color: COLORS.text,
-    fontWeight: '500',
-  },
-  menuValue: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  menuArrow: {
-    fontSize: 24,
-    color: COLORS.grey,
-  },
-  logoutButton: {
-    margin: 16,
-    backgroundColor: COLORS.error,
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  logoutText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  screen: { flex: 1, backgroundColor: C.bg },
+  person: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 20, paddingHorizontal: 4 },
+  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' },
+  avatarText: { fontFamily: F.display, fontSize: 26, color: C.white },
+  name: { fontFamily: F.display, fontSize: 26, color: C.ink },
+  small: { fontFamily: F.regular, fontSize: 14, color: C.muted },
+  list: { backgroundColor: C.surface, borderRadius: R.panel, borderWidth: 1, borderColor: C.line, overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: C.line },
+  value: { fontFamily: F.medium, fontSize: 16, color: C.ink, marginTop: 2 },
+  action: { fontFamily: F.medium, fontSize: 15, color: C.ink, textDecorationLine: 'underline' },
 });

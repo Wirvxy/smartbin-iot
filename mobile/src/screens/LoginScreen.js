@@ -1,167 +1,120 @@
 import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
+  View, Text, TextInput, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import { COLORS } from '../utils/constants';
+import { DEMO_MODE } from '../utils/constants';
+import { C, F, R } from '../theme';
+import { Button, Logo } from '../components/ui';
+import BinGauge from '../components/BinGauge';
+
+// Illustration only: these fills are not real data.
+const ILLUSTRATION = [34, 66, 91, 18, 73];
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Alert.alert ne fait rien sur le web (react-native-web) : on utilise window.alert
-  function showError(title, message) {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n${message}`);
-    } else {
-      Alert.alert(title, message);
-    }
-  }
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
 
   async function handleLogin() {
-    if (!email.trim() || !password.trim()) {
-      showError('Erreur', 'Veuillez remplir tous les champs.');
+    setError(null);
+    if (!email.trim() || !password) {
+      setError("Saisissez votre e-mail (ou nom d'utilisateur) et votre mot de passe.");
       return;
     }
-
-    setIsLoading(true);
+    setBusy(true);
     try {
       await login(email.trim(), password);
-    } catch (error) {
-      const message = error.response
-        ? 'Email ou mot de passe incorrect.'
-        : 'Serveur injoignable. Vérifiez EXPO_PUBLIC_API_URL.';
-      showError('Erreur de connexion', message);
+    } catch (e) {
+      setError(e?.response?.status === 401
+        ? 'Identifiant ou mot de passe incorrect.'
+        : "Le serveur ne répond pas. Vérifiez l'adresse du backend et votre connexion.");
     } finally {
-      setIsLoading(false);
+      setBusy(false);
     }
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.header}>
-        <Text style={styles.icon}>♻️</Text>
-        <Text style={styles.title}>SmartWaste</Text>
-        <Text style={styles.subtitle}>Gestion Intelligente des Déchets</Text>
-      </View>
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: C.bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+        <View style={styles.hero}>
+          <View style={styles.brand}>
+            <Logo size={22} />
+            <Text style={styles.brandText}>SmartBin</Text>
+          </View>
+          <Text style={styles.headline}>Le bac le plus proche qui a encore de la place.</Text>
+          <View style={styles.bins} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+            {ILLUSTRATION.map((f, i) => (
+              <BinGauge key={i} fill={f} threshold={80} size={44} showPct={false} dark />
+            ))}
+          </View>
+        </View>
 
-      <View style={styles.form}>
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="votre@email.com"
-          placeholderTextColor={COLORS.grey}
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
+        <View style={styles.form}>
+          <Text style={styles.title}>Connexion</Text>
 
-        <Text style={styles.label}>Mot de passe</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Votre mot de passe"
-          placeholderTextColor={COLORS.grey}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        <TouchableOpacity
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.white} />
-          ) : (
-            <Text style={styles.buttonText}>Se connecter</Text>
+          {error && (
+            <View style={styles.error} accessibilityRole="alert">
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
           )}
-        </TouchableOpacity>
-      </View>
+
+          <Text style={styles.label}>E-mail ou nom d'utilisateur</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="email-address"
+            placeholder="vous@exemple.ma"
+            placeholderTextColor={C.muted}
+            accessibilityLabel="E-mail ou nom d'utilisateur"
+          />
+          <Text style={[styles.label, { marginTop: 16 }]}>Mot de passe</Text>
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            placeholder="••••••••"
+            placeholderTextColor={C.muted}
+            onSubmitEditing={handleLogin}
+            accessibilityLabel="Mot de passe"
+          />
+
+          {busy
+            ? <View style={[styles.busy]}><ActivityIndicator color={C.white} /></View>
+            : <Button title="Se connecter" onPress={handleLogin} style={{ marginTop: 24 }} />}
+
+          {DEMO_MODE && (
+            <Text style={styles.hint}>
+              Mode démo : saisissez n'importe quel identifiant et mot de passe. Les bacs affichés sont fictifs.
+            </Text>
+          )}
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  icon: {
-    fontSize: 64,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: COLORS.primary,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  form: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 16,
-    padding: 24,
-    elevation: 4,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-    marginBottom: 6,
-    marginTop: 12,
-  },
+  hero: { backgroundColor: C.ink, paddingHorizontal: 24, paddingTop: 56, paddingBottom: 0, overflow: 'hidden' },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  brandText: { fontFamily: F.display, fontSize: 26, color: C.white },
+  headline: { fontFamily: F.display, fontSize: 38, lineHeight: 40, color: C.white, marginTop: 36, maxWidth: 340 },
+  bins: { flexDirection: 'row', gap: 14, marginTop: 32, alignItems: 'flex-end' },
+  form: { paddingHorizontal: 24, paddingTop: 28, paddingBottom: 40 },
+  title: { fontFamily: F.display, fontSize: 30, color: C.ink, marginBottom: 18 },
+  label: { fontFamily: F.medium, fontSize: 15, color: C.ink2, marginBottom: 6 },
   input: {
-    backgroundColor: COLORS.background,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: COLORS.lightGrey,
+    height: 48, borderWidth: 1, borderColor: C.lineStrong, borderRadius: R.control, backgroundColor: C.surface,
+    paddingHorizontal: 12, fontFamily: F.regular, fontSize: 16, color: C.ink,
   },
-  button: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  buttonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
+  busy: { marginTop: 24, height: 46, borderRadius: R.control, backgroundColor: C.ink, alignItems: 'center', justifyContent: 'center' },
+  error: { backgroundColor: C.fullSoft, borderRadius: R.control, padding: 12, marginBottom: 16 },
+  errorText: { fontFamily: F.regular, fontSize: 15, color: C.fullInk },
+  hint: { fontFamily: F.regular, fontSize: 14, lineHeight: 20, color: C.muted, marginTop: 18 },
 });

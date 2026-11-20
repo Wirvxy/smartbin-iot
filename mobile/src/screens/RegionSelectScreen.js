@@ -1,200 +1,81 @@
-import React, { useState, useMemo } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
 import { useRegion } from '../context/RegionContext';
-import { COLORS } from '../utils/constants';
+import { getAllContainers } from '../api/containerService';
+import { C, F, R } from '../theme';
+import BinGauge from '../components/BinGauge';
 
+/**
+ * District picker. Each row shows the district's bins as small gauges,
+ * so you can see at a glance where there is still room.
+ */
 export default function RegionSelectScreen({ navigation }) {
   const { regions, selectedRegion, selectRegion, isLoading } = useRegion();
-  const [search, setSearch] = useState('');
+  const [containers, setContainers] = useState([]);
 
-  // Filtrer les régions selon la recherche
-  const filteredRegions = useMemo(() => {
-    if (!search.trim()) return regions;
-    const query = search.toLowerCase();
-    return regions.filter((region) =>
-      region.name.toLowerCase().includes(query)
-    );
-  }, [regions, search]);
+  useEffect(() => {
+    getAllContainers().then(setContainers).catch(() => setContainers([]));
+  }, []);
 
-  function handleSelectRegion(region) {
-    selectRegion(region);
-    navigation.navigate('MainTabs');
+  async function choose(region) {
+    await selectRegion(region);
+    navigation.navigate('MainTabs', { screen: 'Bacs' });
   }
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Chargement des régions...</Text>
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" color={C.ink} /></View>;
   }
 
+  const rows = [{ id: null, name: 'Toute la ville', all: true }, ...regions];
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Sélectionner une région</Text>
-        <Text style={styles.subtitle}>
-          Choisissez votre zone pour voir les conteneurs disponibles
-        </Text>
-      </View>
-
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Rechercher une région..."
-          placeholderTextColor={COLORS.grey}
-          value={search}
-          onChangeText={setSearch}
-        />
-      </View>
-
-      <FlatList
-        data={filteredRegions}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={styles.list}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[
-              styles.regionCard,
-              selectedRegion?.id === item.id && styles.regionCardSelected,
-            ]}
-            onPress={() => handleSelectRegion(item)}
-          >
-            <View style={styles.regionInfo}>
-              <Text
-                style={[
-                  styles.regionName,
-                  selectedRegion?.id === item.id && styles.regionNameSelected,
-                ]}
-              >
-                {item.name}
-              </Text>
-              {item.containerCount != null && (
-                <Text style={styles.regionDetail}>
-                  {item.containerCount} conteneur{item.containerCount > 1 ? 's' : ''}
+    <ScrollView style={styles.screen} contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+      <Text style={styles.intro}>Choisissez où vous êtes. Vous pourrez changer de quartier à tout moment.</Text>
+      <View style={styles.list}>
+        {rows.map((r, i) => {
+          const bins = r.all ? containers : containers.filter((c) => c.region === r.id || c.region === r.name);
+          const due = bins.filter((c) => c.fillLevel >= (c.threshold ?? 80)).length;
+          const count = r.all ? containers.length : (r.containerCount ?? bins.length);
+          const active = r.all ? !selectedRegion : selectedRegion?.id === r.id;
+          return (
+            <Pressable
+              key={String(r.id)}
+              onPress={() => choose(r.all ? null : r)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              style={({ pressed }) => [styles.row, i > 0 && styles.rowBorder, pressed && { backgroundColor: C.surface2 }]}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.name}>{r.name}</Text>
+                <Text style={styles.meta}>
+                  {count} bac{count > 1 ? 's' : ''}
+                  {due > 0 ? `, ${due} à collecter` : ''}
+                  {active ? ', sélectionné' : ''}
                 </Text>
-              )}
-            </View>
-            {selectedRegion?.id === item.id && (
-              <Text style={styles.checkmark}>✓</Text>
-            )}
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Aucune région trouvée</Text>
-          </View>
-        }
-      />
-    </View>
+              </View>
+              <View style={styles.minis} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+                {bins.slice(0, 6).map((c) => (
+                  <BinGauge key={c.id} fill={c.fillLevel} threshold={c.threshold ?? 80} size={14} showPct={false} />
+                ))}
+              </View>
+              <Text style={styles.chevron}>›</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: COLORS.textSecondary,
-    fontSize: 16,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  searchInput: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: COLORS.text,
-    borderWidth: 1,
-    borderColor: COLORS.lightGrey,
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  regionCard: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  regionCardSelected: {
-    borderWidth: 2,
-    borderColor: COLORS.primary,
-    backgroundColor: '#E8F5E9',
-  },
-  regionInfo: {
-    flex: 1,
-  },
-  regionName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  regionNameSelected: {
-    color: COLORS.primary,
-  },
-  regionDetail: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 2,
-  },
-  checkmark: {
-    fontSize: 20,
-    color: COLORS.primary,
-    fontWeight: 'bold',
-    marginLeft: 12,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: COLORS.textSecondary,
-  },
+  screen: { flex: 1, backgroundColor: C.bg },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
+  intro: { fontFamily: F.regular, fontSize: 16, lineHeight: 23, color: C.ink2, marginBottom: 16, paddingHorizontal: 4 },
+  list: { backgroundColor: C.surface, borderRadius: R.panel, borderWidth: 1, borderColor: C.line, overflow: 'hidden' },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 16, paddingHorizontal: 16, gap: 12 },
+  rowBorder: { borderTopWidth: 1, borderTopColor: C.line },
+  name: { fontFamily: F.display, fontSize: 22, color: C.ink },
+  meta: { fontFamily: F.regular, fontSize: 14, color: C.muted, marginTop: 2 },
+  minis: { flexDirection: 'row', gap: 4, alignItems: 'flex-end' },
+  chevron: { fontFamily: F.regular, fontSize: 26, color: C.muted, marginLeft: 4 },
 });

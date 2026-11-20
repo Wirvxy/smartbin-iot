@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="js/demo-data.js"></script>
+    <script src="js/demo.js"></script>
+    <link rel="stylesheet" href="css/demo.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Connexion – SmartBin</title>
+    <link rel="icon" type="image/svg+xml" href="css/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/smartbin.css">
+    
+</head>
+<body>
+<div class="login">
+    <aside class="login__aside">
+        <div>
+            <span class="brand">
+                <svg viewBox="0 0 22 26" aria-hidden="true">
+                    <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                    <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+                </svg>
+                SmartBin
+            </span>
+            <h1>Le remplissage de chaque bac, en direct.</h1>
+            <p>Les capteurs des conteneurs envoient leur niveau par LoRa. Le tableau de bord montre lesquels vider en priorité.</p>
+        </div>
+
+        <!-- Illustration only: these bins are not real data. -->
+        <div class="binwall" aria-hidden="true">
+            <span class="bin is-ok" style="--fill: 34%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+            <span class="bin is-soon" style="--fill: 66%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+            <span class="bin is-full" style="--fill: 91%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+            <span class="bin is-ok" style="--fill: 18%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+            <span class="bin is-soon" style="--fill: 73%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+            <span class="bin is-ok" style="--fill: 47%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+        </div>
+    </aside>
+
+    <main class="login__main">
+        <form class="login__form" action="/login" method="post">
+            <h2>Connexion</h2>
+            <p>Accès réservé aux équipes de la ville.</p>
+
+            
+            
+
+            <div class="field">
+                <label for="username">Nom d'utilisateur</label>
+                <input class="input" type="text" id="username" name="username" required autofocus autocomplete="username">
+            </div>
+            <div class="field">
+                <label for="password">Mot de passe</label>
+                <input class="input" type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn--primary">Se connecter</button>
+
+            <p class="demo-hint">
+                Mode démo : connectez-vous avec <strong>admin</strong> et <strong>admin123</strong>.
+            </p>
+        </form>
+    </main>
+</div>
+</body>
+</html>

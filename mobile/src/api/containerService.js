@@ -14,6 +14,7 @@ export function toAppContainer(dto) {
     latitude: dto.latitude,
     longitude: dto.longitude,
     fillLevel: Math.round(dto.fillPercentage ?? 0),
+    threshold: dto.alertThreshold ?? 80,
     region: dto.region,
     status: dto.status,
     lastUpdate: dto.lastUpdate,
@@ -40,12 +41,7 @@ export async function getContainerStatus(containerId) {
     await new Promise((resolve) => setTimeout(resolve, 300));
     const container = MOCK_CONTAINERS.find((c) => c.id === containerId);
     if (container) {
-      // Simuler une légère variation du niveau
-      return {
-        ...container,
-        fillLevel: Math.min(100, Math.max(0, container.fillLevel + Math.floor(Math.random() * 5 - 2))),
-        lastUpdate: new Date().toISOString(),
-      };
+      return { ...container };
     }
     throw new Error('Conteneur non trouvé');
   }

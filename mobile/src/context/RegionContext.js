@@ -34,9 +34,14 @@ export function RegionProvider({ children }) {
     }
   }
 
+  // null = toute la ville
   async function selectRegion(region) {
     setSelectedRegion(region);
-    await AsyncStorage.setItem(STORAGE_KEYS.LAST_REGION, String(region.id));
+    if (region) {
+      await AsyncStorage.setItem(STORAGE_KEYS.LAST_REGION, String(region.id));
+    } else {
+      await AsyncStorage.removeItem(STORAGE_KEYS.LAST_REGION);
+    }
   }
 
   return (

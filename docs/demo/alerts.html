@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="js/demo-data.js"></script>
+    <script src="js/demo.js"></script>
+    <link rel="stylesheet" href="css/demo.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Alertes – SmartBin</title>
+    <link rel="icon" type="image/svg+xml" href="css/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/smartbin.css">
+    
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="dashboard.html">
+            <svg viewBox="0 0 22 26" aria-hidden="true">
+                <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+            </svg>
+            SmartBin
+        </a>
+        <nav class="topnav" aria-label="Navigation principale">
+            <a href="dashboard.html">Vue d'ensemble</a>
+            <a href="containers.html">Conteneurs</a>
+            <a href="alerts.html" aria-current="page" class="is-active">
+                Alertes
+                <span class="count num" aria-label="3 alertes ouvertes">3</span>
+            </a>
+            <a href="reports.html">Rapports</a>
+            
+        </nav>
+        <div class="session">
+            <span>manager</span>
+            <form action="/logout" method="post">
+                <button type="submit">Se déconnecter</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="pagehead">
+        <div>
+            <h1>Alertes</h1>
+            <p>Une alerte s'ouvre quand un bac dépasse son seuil. Elle se ferme quand le bac est marqué collecté, ou ici à la main.</p>
+        </div>
+    </div>
+
+    <div class="panel panel--flush">
+        <div class="table-wrap" data-alerts-table>
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Conteneur</th>
+                    <th scope="col">Motif</th>
+                    <th scope="col" class="right">Remplissage</th>
+                    <th scope="col">Ouverte le</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr data-alert-id="1">
+                    <td>
+                        <a class="rowlink" href="container-2.html">Bab Boujloud</a>
+                        <span class="sub">BIN-0002, Fès-Médina</span>
+                    </td>
+                    <td>
+                        
+                            <span class="pill pill--full">Seuil dépassé</span>
+                            
+                            
+                            
+                            
+                        
+                        <span class="sub">Rempli à 82 %, seuil fixé à 80 %</span>
+                    </td>
+                    <td class="right"><span class="meter__value num">82%</span></td>
+                    <td class="num">20/11/2026 01:30</td>
+                    <td class="actions">
+                        <form class="inline" action="/alerts/1/resolve" method="post">
+                            <button type="submit" class="btn btn--sm">Fermer l'alerte</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr data-alert-id="2">
+                    <td>
+                        <a class="rowlink" href="container-4.html">Place R&#39;cif</a>
+                        <span class="sub">BIN-0004, Fès-Médina</span>
+                    </td>
+                    <td>
+                        
+                            <span class="pill pill--full">Seuil dépassé</span>
+                            
+                            
+                            
+                            
+                        
+                        <span class="sub">Rempli à 91 %, seuil fixé à 80 %</span>
+                    </td>
+                    <td class="right"><span class="meter__value num">91%</span></td>
+                    <td class="num">20/11/2026 01:30</td>
+                    <td class="actions">
+                        <form class="inline" action="/alerts/2/resolve" method="post">
+                            <button type="submit" class="btn btn--sm">Fermer l'alerte</button>
+                        </form>
+                    </td>
+                </tr>
+                <tr data-alert-id="3">
+                    <td>
+                        <a class="rowlink" href="container-9.html">Borj Fez</a>
+                        <span class="sub">BIN-0009, Agdal</span>
+                    </td>
+                    <td>
+                        
+                            <span class="pill pill--full">Seuil dépassé</span>
+                            
+                            
+                            
+                            
+                        
+                        <span class="sub">Rempli à 97 %, seuil fixé à 80 %</span>
+                    </td>
+                    <td class="right"><span class="meter__value num">97%</span></td>
+                    <td class="num">20/11/2026 01:30</td>
+                    <td class="actions">
+                        <form class="inline" action="/alerts/3/resolve" method="post">
+                            <button type="submit" class="btn btn--sm">Fermer l'alerte</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+</main>
+</body>
+</html>

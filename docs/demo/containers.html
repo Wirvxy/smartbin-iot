@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="js/demo-data.js"></script>
+    <script src="js/demo.js"></script>
+    <link rel="stylesheet" href="css/demo.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Conteneurs – SmartBin</title>
+    <link rel="icon" type="image/svg+xml" href="css/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/smartbin.css">
+    
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="dashboard.html">
+            <svg viewBox="0 0 22 26" aria-hidden="true">
+                <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+            </svg>
+            SmartBin
+        </a>
+        <nav class="topnav" aria-label="Navigation principale">
+            <a href="dashboard.html">Vue d'ensemble</a>
+            <a href="containers.html" aria-current="page" class="is-active">Conteneurs</a>
+            <a href="alerts.html">
+                Alertes
+                <span class="count num" aria-label="3 alertes ouvertes">3</span>
+            </a>
+            <a href="reports.html">Rapports</a>
+            
+        </nav>
+        <div class="session">
+            <span>manager</span>
+            <form action="/logout" method="post">
+                <button type="submit">Se déconnecter</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <div class="pagehead">
+        <div>
+            <h1>Conteneurs</h1>
+            <p>10 conteneurs affichés. Cliquez sur un nom pour voir son historique et sa position.</p>
+        </div>
+        <div class="actions">
+            <a href="/containers/create" class="btn btn--primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Ajouter un conteneur</a>
+        </div>
+    </div>
+
+    <form class="filters" method="get" action="/containers" role="search">
+        <label class="visually-hidden" for="search">Rechercher</label>
+        <input class="input" type="search" id="search" name="search" value=""
+               placeholder="Nom, identifiant ou adresse">
+        <label class="visually-hidden" for="region">Région</label>
+        <select class="select" id="region" name="region">
+            <option value="">Toutes les régions</option>
+            <option value="Agdal">Agdal</option>
+            <option value="Fès Jdid">Fès Jdid</option>
+            <option value="Fès-Médina">Fès-Médina</option>
+            <option value="Saïss">Saïss</option>
+        </select>
+        <label class="visually-hidden" for="status">Statut</label>
+        <select class="select" id="status" name="status">
+            <option value="">Tous les statuts</option>
+            <option value="ACTIVE">Actif</option>
+            <option value="FULL">Plein</option>
+            <option value="MAINTENANCE">En maintenance</option>
+            <option value="INACTIVE">Inactif</option>
+        </select>
+        <button type="submit" class="btn">Filtrer</button>
+        
+    </form>
+
+    <div class="panel panel--flush">
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Conteneur</th>
+                    <th scope="col">Région</th>
+                    <th scope="col">Remplissage et seuil</th>
+                    <th scope="col">Statut</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-1.html">SmartBin EST Fès</a>
+                        <span class="sub">BIN-0001</span>
+                    </td>
+                    <td>Saïss</td>
+                    <td><span class="meter is-ok">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 44.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">44%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/1">Modifier</a>
+                        <form class="inline" action="/containers/delete/1" method="post"
+                              data-name="SmartBin EST Fès" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer SmartBin EST Fès">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-2.html">Bab Boujloud</a>
+                        <span class="sub">BIN-0002</span>
+                    </td>
+                    <td>Fès-Médina</td>
+                    <td><span class="meter is-full">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 82.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">82%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/2">Modifier</a>
+                        <form class="inline" action="/containers/delete/2" method="post"
+                              data-name="Bab Boujloud" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Bab Boujloud">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-3.html">Avenue Hassan II</a>
+                        <span class="sub">BIN-0003</span>
+                    </td>
+                    <td>Agdal</td>
+                    <td><span class="meter is-ok">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 47.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">47%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/3">Modifier</a>
+                        <form class="inline" action="/containers/delete/3" method="post"
+                              data-name="Avenue Hassan II" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Avenue Hassan II">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-4.html">Place R&#39;cif</a>
+                        <span class="sub">BIN-0004</span>
+                    </td>
+                    <td>Fès-Médina</td>
+                    <td><span class="meter is-full">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 91.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">91%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/4">Modifier</a>
+                        <form class="inline" action="/containers/delete/4" method="post"
+                              data-name="Place R&#39;cif" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Place R&#39;cif">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-5.html">Gare de Fès</a>
+                        <span class="sub">BIN-0005</span>
+                    </td>
+                    <td>Agdal</td>
+                    <td><span class="meter is-ok">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 23.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">23%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/5">Modifier</a>
+                        <form class="inline" action="/containers/delete/5" method="post"
+                              data-name="Gare de Fès" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Gare de Fès">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-6.html">Bab Semmarine</a>
+                        <span class="sub">BIN-0006</span>
+                    </td>
+                    <td>Fès Jdid</td>
+                    <td><span class="meter is-soon">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 64.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">64%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/6">Modifier</a>
+                        <form class="inline" action="/containers/delete/6" method="post"
+                              data-name="Bab Semmarine" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Bab Semmarine">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-7.html">Complexe sportif</a>
+                        <span class="sub">BIN-0007</span>
+                    </td>
+                    <td>Saïss</td>
+                    <td><span class="meter is-soon">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 76.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">76%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/7">Modifier</a>
+                        <form class="inline" action="/containers/delete/7" method="post"
+                              data-name="Complexe sportif" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Complexe sportif">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-8.html">Bab Ftouh</a>
+                        <span class="sub">BIN-0008</span>
+                    </td>
+                    <td>Fès-Médina</td>
+                    <td><span class="meter is-ok">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 15.0%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">15%</span>
+</span></td>
+                    <td>
+    
+    
+    <span class="pill pill--maint">En maintenance</span>
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/8">Modifier</a>
+                        <form class="inline" action="/containers/delete/8" method="post"
+                              data-name="Bab Ftouh" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Bab Ftouh">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-9.html">Borj Fez</a>
+                        <span class="sub">BIN-0009</span>
+                    </td>
+                    <td>Agdal</td>
+                    <td><span class="meter is-full">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 97.00000000000001%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">97%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/9">Modifier</a>
+                        <form class="inline" action="/containers/delete/9" method="post"
+                              data-name="Borj Fez" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Borj Fez">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a class="rowlink" href="container-10.html">Jardin Jnan Sbil</a>
+                        <span class="sub">BIN-0010</span>
+                    </td>
+                    <td>Fès Jdid</td>
+                    <td><span class="meter is-ok">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" style="width: 53.99999999999999%"></span>
+        <span class="meter__limit" style="left: 80.0%"></span>
+    </span>
+    <span class="meter__value">54%</span>
+</span></td>
+                    <td>
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" href="/containers/edit/10">Modifier</a>
+                        <form class="inline" action="/containers/delete/10" method="post"
+                              data-name="Jardin Jnan Sbil" onsubmit="return confirm('Supprimer « ' + this.dataset.name + ' » et tout son historique ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" aria-label="Supprimer Jardin Jnan Sbil">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+</main>
+</body>
+</html>

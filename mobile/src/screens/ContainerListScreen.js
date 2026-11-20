@@ -1,326 +1,163 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  RefreshControl,
+  View, Text, FlatList, Pressable, StyleSheet, ActivityIndicator, RefreshControl, Linking,
 } from 'react-native';
 import { useRegion } from '../context/RegionContext';
 import { useLocation } from '../context/LocationContext';
 import { getContainersByRegion, getAllContainers } from '../api/containerService';
-import { getFillColor, getFillLabel, formatDistance, getRecommendedContainers } from '../utils/helpers';
-import { COLORS } from '../utils/constants';
+import { formatDistance, getRecommendedContainers, directionsUrl } from '../utils/helpers';
+import { C, F, R, STATE, fillState } from '../theme';
+import { Button, Panel } from '../components/ui';
+import BinGauge from '../components/BinGauge';
 
+/**
+ * Bins near you, best recommendation first (emptiest and closest; full bins last).
+ * The first bin with room is shown big, with a button to get there.
+ */
 export default function ContainerListScreen({ navigation }) {
   const { selectedRegion } = useRegion();
-  const { location } = useLocation();
+  const { location, simulated } = useLocation();
   const [containers, setContainers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  const loadContainers = useCallback(async () => {
+  const load = useCallback(async () => {
     try {
-      let data;
-      if (selectedRegion) {
-        data = await getContainersByRegion(selectedRegion.id);
-      } else {
-        data = await getAllContainers();
-      }
-
-      // Si on a la position, calculer les distances et trier par recommandation
-      if (location) {
-        data = getRecommendedContainers(data, location.latitude, location.longitude);
-      }
-
+      let data = selectedRegion ? await getContainersByRegion(selectedRegion.id) : await getAllContainers();
+      if (location) data = getRecommendedContainers(data, location.latitude, location.longitude);
       setContainers(data);
-    } catch (error) {
-      console.error('Erreur chargement conteneurs:', error);
+      setFailed(false);
+    } catch (e) {
+      setFailed(true);
     } finally {
       setIsLoading(false);
       setRefreshing(false);
     }
   }, [selectedRegion, location]);
 
-  useEffect(() => {
-    loadContainers();
-  }, [loadContainers]);
-
-  function onRefresh() {
-    setRefreshing(true);
-    loadContainers();
-  }
-
-  function handleContainerPress(container) {
-    navigation.navigate('ContainerDetail', { container });
-  }
-
-  function renderContainer({ item }) {
-    const fillColor = getFillColor(item.fillLevel);
-    const fillLabel = getFillLabel(item.fillLevel);
-
-    return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => handleContainerPress(item)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.cardLeft}>
-          {/* Barre de niveau de remplissage */}
-          <View style={styles.fillBarContainer}>
-            <View
-              style={[
-                styles.fillBar,
-                { height: `${item.fillLevel}%`, backgroundColor: fillColor },
-              ]}
-            />
-          </View>
-        </View>
-
-        <View style={styles.cardContent}>
-          <Text style={styles.containerName}>
-            {item.name || `Conteneur #${item.id}`}
-          </Text>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusBadge, { backgroundColor: fillColor + '20' }]}>
-              <View style={[styles.statusDot, { backgroundColor: fillColor }]} />
-              <Text style={[styles.statusText, { color: fillColor }]}>
-                {fillLabel}
-              </Text>
-            </View>
-            <Text style={styles.fillPercent}>{item.fillLevel}%</Text>
-          </View>
-
-          {item.distance != null && (
-            <Text style={styles.distance}>
-              📍 {formatDistance(item.distance)}
-            </Text>
-          )}
-
-          {item.score != null && (
-            <View style={styles.scoreRow}>
-              <Text style={styles.scoreLabel}>Score recommandation:</Text>
-              <Text style={styles.scoreValue}>{(item.score * 100).toFixed(0)}%</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
-  }
+  useEffect(() => { load(); }, [load]);
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Chargement des conteneurs...</Text>
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" color={C.ink} /></View>;
   }
 
-  return (
-    <View style={styles.container}>
-      {selectedRegion && (
-        <View style={styles.regionBanner}>
-          <Text style={styles.regionBannerText}>
-            Région: {selectedRegion.name}
-          </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('RegionSelect')}>
-            <Text style={styles.changeRegion}>Changer</Text>
-          </TouchableOpacity>
+  const best = containers.find((c) => fillState(c.fillLevel, c.threshold ?? 80) !== 'full' && c.status !== 'MAINTENANCE');
+  const rest = containers.filter((c) => c !== best);
+
+  const header = (
+    <View>
+      <View style={styles.where}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.whereLabel}>Quartier</Text>
+          <Text style={styles.whereName}>{selectedRegion?.name ?? 'Toute la ville'}</Text>
         </View>
+        <Button title="Changer" variant="ghost" small onPress={() => navigation.navigate('RegionSelect')} />
+      </View>
+
+      {failed && (
+        <Panel style={{ marginBottom: 16, backgroundColor: C.fullSoft, borderColor: C.fullSoft }}>
+          <Text style={[styles.body, { color: C.fullInk }]}>Impossible de charger les bacs. Tirez vers le bas pour réessayer.</Text>
+        </Panel>
       )}
 
-      {containers.length > 0 && containers[0].score != null && (
-        <View style={styles.recommendationBanner}>
-          <Text style={styles.recommendationText}>
-            ⭐ Conteneur recommandé: #{containers[0].id} ({formatDistance(containers[0].distance)}, {containers[0].fillLevel}% rempli)
-          </Text>
-        </View>
-      )}
-
-      <FlatList
-        data={containers}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={renderContainer}
-        contentContainerStyle={styles.list}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={[COLORS.primary]}
-            tintColor={COLORS.primary}
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>🗑️</Text>
-            <Text style={styles.emptyText}>Aucun conteneur trouvé</Text>
-            <Text style={styles.emptySubtext}>
-              {selectedRegion
-                ? 'Aucun conteneur dans cette région'
-                : 'Sélectionnez une région pour commencer'}
-            </Text>
+      {best ? (
+        <Panel style={styles.hero}>
+          <Text style={styles.heroLabel}>{location ? 'Le plus proche avec de la place' : 'Un bac avec de la place'}</Text>
+          <View style={styles.heroRow}>
+            <BinGauge fill={best.fillLevel} threshold={best.threshold ?? 80} size={64} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.heroName}>{best.name}</Text>
+              <Text style={styles.small}>{best.address}</Text>
+              {best.distance != null && (
+                <Text style={styles.heroDistance}>{formatDistance(best.distance)}{simulated ? ' depuis le centre de Fès' : ' à pied'}</Text>
+              )}
+            </View>
           </View>
-        }
-      />
+          <View style={styles.heroActions}>
+            <Button title="Itinéraire" onPress={() => Linking.openURL(directionsUrl(best))} style={{ flex: 1 }} />
+            <Button title="Détails" variant="ghost" onPress={() => navigation.navigate('ContainerDetail', { container: best })} style={{ flex: 1 }} />
+          </View>
+        </Panel>
+      ) : (!failed && (
+        <Panel style={styles.hero}>
+          <Text style={styles.heroName}>Tous les bacs du quartier sont pleins.</Text>
+          <Text style={[styles.small, { marginTop: 4 }]}>Essayez un autre quartier, ou revenez après la prochaine collecte.</Text>
+        </Panel>
+      ))}
+
+      {rest.length > 0 && (
+        <Text style={styles.sectionTitle}>
+          {location ? 'Autres bacs, du plus pratique au moins pratique' : 'Autres bacs'}
+        </Text>
+      )}
     </View>
+  );
+
+  return (
+    <FlatList
+      style={styles.screen}
+      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      data={rest}
+      keyExtractor={(item) => String(item.id)}
+      ListHeaderComponent={header}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.ink} colors={[C.ink]} />}
+      renderItem={({ item, index }) => {
+        const state = fillState(item.fillLevel, item.threshold ?? 80);
+        return (
+          <Pressable
+            onPress={() => navigation.navigate('ContainerDetail', { container: item })}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.name}, rempli à ${item.fillLevel} %`}
+            style={({ pressed }) => [
+              styles.row,
+              index === 0 && styles.rowFirst,
+              index === rest.length - 1 && styles.rowLast,
+              pressed && { backgroundColor: C.surface2 },
+            ]}
+          >
+            <BinGauge fill={item.fillLevel} threshold={item.threshold ?? 80} size={22} showPct={false} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowName}>{item.name}</Text>
+              <Text style={styles.small}>
+                {item.code}
+                {item.distance != null ? `, ${formatDistance(item.distance)}` : ''}
+                {item.status === 'MAINTENANCE' ? ', en maintenance' : ''}
+              </Text>
+            </View>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={[styles.rowPct, { color: state === 'full' ? STATE.full.ink : C.ink }]}>{item.fillLevel}%</Text>
+              <Text style={[styles.rowState, { color: STATE[state].ink }]}>{STATE[state].label}</Text>
+            </View>
+          </Pressable>
+        );
+      }}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
+  screen: { flex: 1, backgroundColor: C.bg },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
+  body: { fontFamily: F.regular, fontSize: 15, lineHeight: 21, color: C.ink },
+  small: { fontFamily: F.regular, fontSize: 14, lineHeight: 20, color: C.muted },
+  where: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, paddingHorizontal: 4 },
+  whereLabel: { fontFamily: F.regular, fontSize: 14, color: C.muted },
+  whereName: { fontFamily: F.display, fontSize: 28, color: C.ink },
+  hero: { marginBottom: 24 },
+  heroLabel: { fontFamily: F.medium, fontSize: 15, color: C.ok, marginBottom: 14 },
+  heroRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 18 },
+  heroName: { fontFamily: F.display, fontSize: 26, lineHeight: 29, color: C.ink },
+  heroDistance: { fontFamily: F.semibold, fontSize: 16, color: C.ink, marginTop: 8 },
+  heroActions: { flexDirection: 'row', gap: 10, marginTop: 20 },
+  sectionTitle: { fontFamily: F.medium, fontSize: 15, color: C.muted, marginBottom: 8, paddingHorizontal: 4 },
+  row: {
+    flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 16,
+    backgroundColor: C.surface, borderColor: C.line, borderLeftWidth: 1, borderRightWidth: 1, borderTopWidth: 1,
   },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: COLORS.textSecondary,
-    fontSize: 16,
-  },
-  regionBanner: {
-    backgroundColor: COLORS.primary,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-  },
-  regionBannerText: {
-    color: COLORS.white,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  changeRegion: {
-    color: COLORS.white,
-    fontSize: 14,
-    textDecorationLine: 'underline',
-  },
-  recommendationBanner: {
-    backgroundColor: '#FFF8E1',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#FFE082',
-  },
-  recommendationText: {
-    fontSize: 13,
-    color: '#F57F17',
-    fontWeight: '500',
-  },
-  list: {
-    padding: 16,
-  },
-  card: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    marginBottom: 12,
-    flexDirection: 'row',
-    overflow: 'hidden',
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  cardLeft: {
-    width: 40,
-    padding: 8,
-    justifyContent: 'flex-end',
-  },
-  fillBarContainer: {
-    flex: 1,
-    backgroundColor: COLORS.lightGrey,
-    borderRadius: 6,
-    overflow: 'hidden',
-    justifyContent: 'flex-end',
-  },
-  fillBar: {
-    borderRadius: 6,
-    minHeight: 4,
-  },
-  cardContent: {
-    flex: 1,
-    padding: 14,
-  },
-  containerName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 6,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
-    marginRight: 8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  fillPercent: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: COLORS.text,
-  },
-  distance: {
-    fontSize: 13,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  scoreLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-  },
-  scoreValue: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: COLORS.primary,
-    marginLeft: 4,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    textAlign: 'center',
-  },
+  rowFirst: { borderTopLeftRadius: R.panel, borderTopRightRadius: R.panel },
+  rowLast: { borderBottomWidth: 1, borderBottomLeftRadius: R.panel, borderBottomRightRadius: R.panel },
+  rowName: { fontFamily: F.semibold, fontSize: 16, color: C.ink },
+  rowPct: { fontFamily: F.display, fontSize: 22, fontVariant: ['tabular-nums'] },
+  rowState: { fontFamily: F.medium, fontSize: 12 },
 });

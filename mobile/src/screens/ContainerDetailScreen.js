@@ -1,294 +1,101 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  Linking,
-  Platform,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Linking, RefreshControl } from 'react-native';
 import { getContainerStatus } from '../api/containerService';
 import { useLocation } from '../context/LocationContext';
-import { useRegion } from '../context/RegionContext';
-import { getFillColor, getFillLabel, formatDistance, haversineDistance, formatDate } from '../utils/helpers';
-import { COLORS } from '../utils/constants';
+import { formatDistance, haversineDistance, formatAgo, directionsUrl } from '../utils/helpers';
+import { C, F, R } from '../theme';
+import { Button, Panel, StatePill } from '../components/ui';
+import BinGauge from '../components/BinGauge';
 
-export default function ContainerDetailScreen({ route }) {
-  const { regions } = useRegion();
-  const { container: initialContainer } = route.params;
-  const { location } = useLocation();
-  const [container, setContainer] = useState(initialContainer);
-  const [isLoading, setIsLoading] = useState(false);
+export default function ContainerDetailScreen({ route, navigation }) {
+  const { container: initial } = route.params;
+  const { location, simulated } = useLocation();
+  const [container, setContainer] = useState(initial);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    refreshStatus();
+    navigation.setOptions({ title: initial.code || 'Conteneur' });
+    refresh();
   }, []);
 
-  async function refreshStatus() {
-    setIsLoading(true);
+  async function refresh() {
     try {
-      const status = await getContainerStatus(initialContainer.id);
+      const status = await getContainerStatus(initial.id);
       setContainer((prev) => ({ ...prev, ...status }));
-    } catch (error) {
-      console.error('Erreur statut conteneur:', error);
+    } catch (e) {
+      // keep showing the last known values
     } finally {
-      setIsLoading(false);
+      setRefreshing(false);
     }
   }
 
-  function openNavigation() {
-    const url = Platform.select({
-      ios: `maps:0,0?q=${container.latitude},${container.longitude}`,
-      android: `google.navigation:q=${container.latitude},${container.longitude}`,
-    });
-    Linking.openURL(url).catch(() => {
-      Linking.openURL(
-        `https://www.google.com/maps/dir/?api=1&destination=${container.latitude},${container.longitude}`
-      );
-    });
-  }
-
-  const fillColor = getFillColor(container.fillLevel);
-  const fillLabel = getFillLabel(container.fillLevel);
-  const distance =
-    location
-      ? haversineDistance(
-          location.latitude,
-          location.longitude,
-          container.latitude,
-          container.longitude
-        )
-      : null;
+  const threshold = container.threshold ?? 80;
+  const distance = location && container.latitude != null
+    ? haversineDistance(location.latitude, location.longitude, container.latitude, container.longitude)
+    : null;
 
   return (
-    <ScrollView style={styles.container}>
-      {/* En-tête avec jauge de remplissage */}
-      <View style={styles.header}>
-        <View style={styles.gaugeContainer}>
-          <View style={styles.gaugeBackground}>
-            <View
-              style={[
-                styles.gaugeFill,
-                {
-                  width: `${container.fillLevel}%`,
-                  backgroundColor: fillColor,
-                },
-              ]}
-            />
+    <ScrollView
+      style={styles.screen}
+      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); refresh(); }} tintColor={C.ink} colors={[C.ink]} />}
+    >
+      <Text style={styles.name}>{container.name}</Text>
+      <Text style={styles.address}>
+        {container.address && container.region && !container.address.includes(container.region)
+          ? `${container.address}, ${container.region}`
+          : container.address || container.region}
+      </Text>
+
+      <Panel style={{ marginTop: 18 }}>
+        <View style={styles.top}>
+          <BinGauge fill={container.fillLevel} threshold={threshold} size={104} />
+          <View style={{ flex: 1, gap: 14 }}>
+            <StatePill fill={container.fillLevel} threshold={threshold} />
+            {container.status === 'MAINTENANCE' && (
+              <Text style={styles.warn}>Ce bac est en maintenance, il peut ne pas être vidé à temps.</Text>
+            )}
+            <Fact label="Seuil d'alerte" value={`${Math.round(threshold)} %`} />
+            {distance != null && (
+              <Fact label={simulated ? 'Depuis le centre de Fès' : 'Distance'} value={formatDistance(distance)} />
+            )}
+            <Fact label="Dernière mesure" value={formatAgo(container.lastUpdate)} text />
           </View>
-          <Text style={[styles.gaugeText, { color: fillColor }]}>
-            {container.fillLevel}%
-          </Text>
         </View>
-        <Text style={styles.headerTitle}>{container.name || `Conteneur #${container.id}`}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: fillColor + '20' }]}>
-          <View style={[styles.statusDot, { backgroundColor: fillColor }]} />
-          <Text style={[styles.statusText, { color: fillColor }]}>
-            {fillLabel}
-          </Text>
-        </View>
+        <Text style={styles.note}>La ligne pointillée marque le seuil : au-delà, une équipe est prévenue pour le vider.</Text>
+      </Panel>
+
+      <View style={styles.actions}>
+        <Button title="Itinéraire à pied" onPress={() => Linking.openURL(directionsUrl(container))} />
+        <Button title="Voir sur la carte" variant="ghost" onPress={() => navigation.navigate('MainTabs', { screen: 'Carte', params: { focusId: container.id } })} />
       </View>
 
-      {/* Informations */}
-      <View style={styles.infoSection}>
-        <Text style={styles.sectionTitle}>Informations</Text>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Niveau de remplissage</Text>
-          <Text style={[styles.infoValue, { color: fillColor }]}>
-            {container.fillLevel}%
-          </Text>
-        </View>
-
-        {distance != null && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Distance</Text>
-            <Text style={styles.infoValue}>{formatDistance(distance)}</Text>
-          </View>
-        )}
-
-        <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Coordonnées</Text>
-          <Text style={styles.infoValue}>
-            {container.latitude?.toFixed(4)}, {container.longitude?.toFixed(4)}
-          </Text>
-        </View>
-
-        {container.region && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Région</Text>
-            <Text style={styles.infoValue}>
-              {typeof container.region === 'object'
-                ? container.region.name
-                : regions.find((r) => String(r.id) === String(container.region))?.name ?? container.region}
-            </Text>
-          </View>
-        )}
-
-        {container.lastUpdate && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Dernière mise à jour</Text>
-            <Text style={styles.infoValue}>
-              {formatDate(container.lastUpdate)}
-            </Text>
-          </View>
-        )}
-
-        {container.score != null && (
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Score de recommandation</Text>
-            <Text style={[styles.infoValue, { color: COLORS.primary }]}>
-              {(container.score * 100).toFixed(0)}%
-            </Text>
-          </View>
-        )}
-      </View>
-
-      {/* Actions */}
-      <View style={styles.actionsSection}>
-        <TouchableOpacity style={styles.navButton} onPress={openNavigation}>
-          <Text style={styles.navButtonText}>🧭 Naviguer vers ce conteneur</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.refreshButton}
-          onPress={refreshStatus}
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <ActivityIndicator color={COLORS.primary} />
-          ) : (
-            <Text style={styles.refreshButtonText}>↻ Rafraîchir le statut</Text>
-          )}
-        </TouchableOpacity>
-      </View>
+      <Text style={styles.coords}>
+        {container.code}, GPS {container.latitude?.toFixed(5)}, {container.longitude?.toFixed(5)}
+      </Text>
     </ScrollView>
   );
 }
 
+function Fact({ label, value, text }) {
+  return (
+    <View>
+      <Text style={styles.factLabel}>{label}</Text>
+      <Text style={text ? styles.factText : styles.factValue}>{value}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  header: {
-    backgroundColor: COLORS.surface,
-    padding: 24,
-    alignItems: 'center',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    elevation: 3,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  gaugeContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  gaugeBackground: {
-    width: '100%',
-    height: 16,
-    backgroundColor: COLORS.lightGrey,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  gaugeFill: {
-    height: '100%',
-    borderRadius: 8,
-  },
-  gaugeText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginTop: 8,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 8,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  statusDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 8,
-  },
-  statusText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  infoSection: {
-    backgroundColor: COLORS.surface,
-    margin: 16,
-    borderRadius: 16,
-    padding: 20,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 16,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.lightGrey,
-  },
-  infoLabel: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-  },
-  infoValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  actionsSection: {
-    padding: 16,
-    gap: 12,
-  },
-  navButton: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  navButtonText: {
-    color: COLORS.white,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  refreshButton: {
-    backgroundColor: COLORS.surface,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-  },
-  refreshButtonText: {
-    color: COLORS.primary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
+  screen: { flex: 1, backgroundColor: C.bg },
+  name: { fontFamily: F.display, fontSize: 32, lineHeight: 35, color: C.ink, marginTop: 4 },
+  address: { fontFamily: F.regular, fontSize: 15, color: C.muted, marginTop: 4 },
+  top: { flexDirection: 'row', alignItems: 'flex-end', gap: 22 },
+  warn: { fontFamily: F.regular, fontSize: 14, lineHeight: 19, color: C.soonInk },
+  factLabel: { fontFamily: F.regular, fontSize: 13, color: C.muted },
+  factValue: { fontFamily: F.display, fontSize: 22, color: C.ink, fontVariant: ['tabular-nums'] },
+  factText: { fontFamily: F.medium, fontSize: 16, color: C.ink, marginTop: 2 },
+  note: { fontFamily: F.regular, fontSize: 13, lineHeight: 18, color: C.muted, marginTop: 18 },
+  actions: { gap: 10, marginTop: 20 },
+  coords: { fontFamily: F.regular, fontSize: 13, color: C.muted, marginTop: 20, textAlign: 'center' },
 });

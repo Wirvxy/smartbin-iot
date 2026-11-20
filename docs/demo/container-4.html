@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="js/demo-data.js"></script>
+    <script src="js/demo.js"></script>
+    <link rel="stylesheet" href="css/demo.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Place R&#39;cif – SmartBin</title>
+    <link rel="icon" type="image/svg+xml" href="css/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/smartbin.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="dashboard.html">
+            <svg viewBox="0 0 22 26" aria-hidden="true">
+                <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+            </svg>
+            SmartBin
+        </a>
+        <nav class="topnav" aria-label="Navigation principale">
+            <a href="dashboard.html">Vue d'ensemble</a>
+            <a href="containers.html" aria-current="page" class="is-active">Conteneurs</a>
+            <a href="alerts.html">
+                Alertes
+                <span class="count num" aria-label="3 alertes ouvertes">3</span>
+            </a>
+            <a href="reports.html">Rapports</a>
+            
+        </nav>
+        <div class="session">
+            <span>manager</span>
+            <form action="/logout" method="post">
+                <button type="submit">Se déconnecter</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <a class="crumb" href="containers.html"><i class="bi bi-arrow-left" aria-hidden="true"></i>Tous les conteneurs</a>
+    <div class="pagehead">
+        <div>
+            <h1>Place R&#39;cif</h1>
+            <p>
+                <span>BIN-0004</span>,
+                <span>Fès-Médina</span>,
+                <span>Place R&#39;cif, Fès Médina</span>
+            </p>
+        </div>
+        <div class="actions">
+            <a class="btn" href="/containers/edit/4">Modifier</a>
+            <form class="inline" action="/containers/4/collect" method="post">
+                <button type="submit" class="btn btn--primary">Marquer collecté</button>
+            </form>
+        </div>
+    </div>
+
+    <section class="panel" aria-label="Remplissage">
+        <div class="detail">
+            <div class="binwall binwall--lg is-priming" id="binwall">
+                <a class="bin is-full"
+   href="container-4.html"
+   style="--fill: 91.0%; --limit: 80.0%"
+   aria-label="BIN-0004, Place R&#39;cif, rempli à 91 %, seuil 80 %"
+   data-id="4">
+    <span class="bin__pct" aria-hidden="true"><span>91</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0004</span>
+    <span class="bin__place" aria-hidden="true">Place R&#39;cif</span>
+</a>
+            </div>
+            <div>
+                <p style="margin-bottom: 18px;">
+    <span class="pill pill--ok">Actif</span>
+    
+    
+    
+    
+</p>
+                <dl class="facts">
+                    <div>
+                        <dt>Remplissage</dt>
+                        <dd>91.0 %</dd>
+                    </div>
+                    <div>
+                        <dt>Seuil d'alerte</dt>
+                        <dd>80 %</dd>
+                    </div>
+                    <div>
+                        <dt>Contenu actuel</dt>
+                        <dd>327.6 L sur 360 L</dd>
+                    </div>
+                    <div>
+                        <dt>Dernière mesure</dt>
+                        <dd class="text">20/11/2026 à 01:30</dd>
+                    </div>
+                    <div>
+                        <dt>Dernière collecte</dt>
+                        <dd class="text">Jamais collecté</dd>
+                    </div>
+                    <div class="wide">
+                        <dt>Description</dt>
+                        <dd class="text">Conteneur intelligent (capteur ultrason + GPS, LoRa 433 MHz)</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </section>
+
+    <div class="split split--detail">
+        <section class="panel panel--flush" aria-labelledby="hist-title">
+            <div class="panel__head">
+                <h2 id="hist-title">Historique</h2>
+                <p>0 événements</p>
+            </div>
+            
+            <p class="empty" style="padding: 16px 24px 24px;">
+                Aucun événement pour l'instant. Les collectes et les modifications de ce bac apparaîtront ici.
+            </p>
+        </section>
+
+        <section class="panel" aria-labelledby="loc-title">
+            <div class="panel__head">
+                <h2 id="loc-title">Position</h2>
+                <p class="num">34.06270, -4.97260</p>
+            </div>
+            <div id="map" class="map map--inset" role="region" aria-label="Position du conteneur"
+                 data-lat="34.0627" data-lon="-4.9726"
+                 data-name="Place R&#39;cif"></div>
+        </section>
+    </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/map.js"></script>
+<script>
+(function () {
+    const wall = document.getElementById('binwall');
+    requestAnimationFrame(() => requestAnimationFrame(() => wall.classList.remove('is-priming')));
+
+    const el = document.getElementById('map');
+    const lat = parseFloat(el.dataset.lat), lon = parseFloat(el.dataset.lon);
+    if (isNaN(lat) || isNaN(lon)) { el.outerHTML = '<p class="empty">Pas de position GPS pour ce bac.</p>'; return; }
+    const map = SmartBinMap.create(el, 16);
+    if (!map) return;
+    map.setView([lat, lon], 16);
+    const state = wall.querySelector('.is-full') ? 'is-full' : wall.querySelector('.is-soon') ? 'is-soon' : 'is-ok';
+    L.marker([lat, lon], { title: el.dataset.name, icon: SmartBinMap.dot(state) }).addTo(map);
+})();
+</script>
+</body>
+</html>

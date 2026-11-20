@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SmartBin – démo en ligne</title>
+    <meta name="description" content="Démo en ligne de SmartBin : conteneurs connectés à Fès, tableau de bord web et application mobile.">
+    <link rel="icon" type="image/svg+xml" href="demo/css/favicon.svg">
+    <link rel="stylesheet" href="demo/css/smartbin.css">
+    <style>
+        .landing { max-width: 1080px; margin: 0 auto; padding: 56px var(--page-pad) 72px; }
+        .landing h1 { font: 600 56px/1.04 var(--font-display); letter-spacing: -.01em; max-width: 15ch; }
+        .landing .lede { font-size: 19px; max-width: 58ch; margin-top: 18px; }
+        .choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 44px; }
+        .choice { display: flex; flex-direction: column; gap: 10px; text-decoration: none; padding: 28px; }
+        .choice:hover { border-color: var(--ink); }
+        .choice h2 { font: 600 28px/1.15 var(--font-display); }
+        .choice p { color: var(--muted); }
+        .choice span { margin-top: auto; font-weight: 600; text-decoration: underline; }
+        .foot { margin-top: 40px; color: var(--muted); font-size: 15px; }
+        .landing .binwall { margin-top: 40px; max-width: 640px; }
+        @media (max-width: 760px) { .landing h1 { font-size: 40px; } .choices { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="./">
+            <svg viewBox="0 0 22 26" aria-hidden="true">
+                <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+            </svg>
+            SmartBin
+        </a>
+        <nav class="topnav" aria-label="Liens">
+            <a href="https://github.com/Wirvxy/smartbin-iot">Code source sur GitHub</a>
+        </nav>
+    </div>
+</header>
+<main class="landing">
+    <h1>Des conteneurs qui disent quand ils sont pleins.</h1>
+    <p class="lede">Chaque bac mesure son remplissage et envoie sa position par LoRa. Une passerelle transmet les mesures à AWS IoT, les équipes de collecte suivent tout sur le tableau de bord, et l'application montre aux habitants le bac le plus proche qui a encore de la place.</p>
+
+    <div class="binwall" aria-hidden="true">
+        <span class="bin is-full" style="--fill: 97%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+        <span class="bin is-full" style="--fill: 91%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+        <span class="bin is-soon" style="--fill: 76%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+        <span class="bin is-soon" style="--fill: 64%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+        <span class="bin is-ok" style="--fill: 47%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+        <span class="bin is-ok" style="--fill: 23%; --limit: 80%"><span class="bin__lid"></span><span class="bin__body"><span class="bin__fill"></span><span class="bin__limit"></span></span></span>
+    </div>
+
+    <div class="choices">
+        <a class="panel choice" href="demo/">
+            <h2>Tableau de bord des équipes</h2>
+            <p>Les 10 bacs de la démo à Fès, du plus plein au plus vide, la tournée à prévoir, la carte et les alertes. Le bac BIN-0001 se remplit en direct, comme avec le capteur.</p>
+            <span>Ouvrir le tableau de bord</span>
+        </a>
+        <a class="panel choice" href="app/">
+            <h2>Application mobile</h2>
+            <p>Le bac le plus proche avec de la place, l'itinéraire à pied, la carte et les statistiques par quartier. Pensée pour un téléphone : ouvrez-la sur mobile ou dans une fenêtre étroite.</p>
+            <span>Ouvrir l'application</span>
+        </a>
+    </div>
+
+    <p class="foot">Données fictives, rien n'est enregistré. Projet de fin d'études, EST Fès. Pour la version complète avec le serveur Spring Boot, voir le <a href="https://github.com/Wirvxy/smartbin-iot">README</a>.</p>
+</main>
+</body>
+</html>

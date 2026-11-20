@@ -15,7 +15,7 @@
     </div>
 
     <div class="panel panel--flush">
-        <div class="table-wrap" th:if="${!alerts.isEmpty()}">
+        <div class="table-wrap" th:if="${!alerts.isEmpty()}" data-alerts-table>
             <table class="table">
                 <thead>
                 <tr>
@@ -27,7 +27,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="a : ${alerts}">
+                <tr th:each="a : ${alerts}" th:data-alert-id="${a.id}">
                     <td>
                         <a class="rowlink" th:href="@{/containers/{id}(id=${a.container.id})}" th:text="${a.container.name}">Nom</a>
                         <span class="sub" th:text="|${a.container.containerId}, ${a.container.region}|">BIN-0001, Fès</span>

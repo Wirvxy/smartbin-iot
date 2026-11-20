@@ -113,6 +113,7 @@
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:src="@{/js/map.js}" src="/js/map.js"></script>
 <script>
 (function () {
     const wall = document.getElementById('binwall');
@@ -121,20 +122,11 @@
     const el = document.getElementById('map');
     const lat = parseFloat(el.dataset.lat), lon = parseFloat(el.dataset.lon);
     if (isNaN(lat) || isNaN(lon)) { el.outerHTML = '<p class="empty">Pas de position GPS pour ce bac.</p>'; return; }
-    if (!window.L) { el.outerHTML = '<p class="empty">La carte n\'a pas pu se charger. Vérifiez la connexion Internet.</p>'; return; }
-    const map = L.map(el, {
-        maxBounds: L.latLngBounds([20.5, -17.6], [36.2, -0.9]), maxBoundsViscosity: 1.0,
-        minZoom: 5, maxZoom: 18, scrollWheelZoom: false
-    }).setView([lat, lon], 15);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd'
-    }).addTo(map);
-    const c = getComputedStyle(document.documentElement).getPropertyValue(
-        wall.querySelector('.is-full') ? '--full' : wall.querySelector('.is-soon') ? '--soon' : '--ok');
-    L.marker([lat, lon], {
-        title: el.dataset.name,
-        icon: L.divIcon({ className: '', html: `<div class="map-dot" style="--c:${c}"></div>`, iconSize: [16, 16] })
-    }).addTo(map);
+    const map = SmartBinMap.create(el, 16);
+    if (!map) return;
+    map.setView([lat, lon], 16);
+    const state = wall.querySelector('.is-full') ? 'is-full' : wall.querySelector('.is-soon') ? 'is-soon' : 'is-ok';
+    L.marker([lat, lon], { title: el.dataset.name, icon: SmartBinMap.dot(state) }).addTo(map);
 })();
 </script>
 </body>

@@ -72,17 +72,18 @@ public class DataInitializer implements CommandLineRunner {
      */
     private void createSampleContainers() {
         Object[][] samples = {
-            // code, name, address, region, lat, lng, capacity (L), initial fill %
-            {"BIN-0001", "SmartBin EST Fès", "Route d'Imouzzer, EST Fès", "Fès-Meknès", 34.0042, -4.9918, 120.0, 35.0},
-            {"BIN-0002", "Bab Boujloud", "Place Bab Boujloud, Fès Médina", "Fès-Meknès", 34.0618, -4.9839, 240.0, 82.0},
-            {"BIN-0003", "Avenue Hassan II", "Avenue Hassan II, Fès Ville Nouvelle", "Fès-Meknès", 34.0372, -5.0004, 240.0, 47.0},
-            {"BIN-0004", "Place El Hedim", "Place El Hedim, Meknès", "Fès-Meknès", 33.8937, -5.5662, 360.0, 91.0},
-            {"BIN-0005", "Agdal", "Avenue de France, Agdal, Rabat", "Rabat-Salé-Kénitra", 33.9935, -6.8528, 240.0, 23.0},
-            {"BIN-0006", "Tour Hassan", "Boulevard Mohamed Lyazidi, Rabat", "Rabat-Salé-Kénitra", 34.0239, -6.8227, 360.0, 64.0},
-            {"BIN-0007", "Twin Center", "Boulevard Zerktouni, Maârif, Casablanca", "Casablanca-Settat", 33.5898, -7.6323, 360.0, 76.0},
-            {"BIN-0008", "Corniche Aïn Diab", "Boulevard de la Corniche, Casablanca", "Casablanca-Settat", 33.5935, -7.6690, 240.0, 15.0},
-            {"BIN-0009", "Boulevard Mohammed V", "Boulevard Mohammed V, Casablanca", "Casablanca-Settat", 33.5951, -7.6187, 240.0, 97.0},
-            {"BIN-0010", "Jardin Jnan Sbil", "Avenue Moulay Hassan, Fès", "Fès-Meknès", 34.0606, -4.9906, 120.0, 54.0},
+            // code, name, address, region, lat, lng, capacity (L), initial fill %, status
+            // Real places in Fès; region = arrondissement, so the mobile app's district picker makes sense.
+            {"BIN-0001", "SmartBin EST Fès", "Route d'Imouzzer, EST Fès", "Saïss", 34.0042, -4.9918, 120.0, 35.0, "ACTIVE"},
+            {"BIN-0002", "Bab Boujloud", "Place Bab Boujloud, Fès Médina", "Fès-Médina", 34.0617, -4.9840, 240.0, 82.0, "ACTIVE"},
+            {"BIN-0003", "Avenue Hassan II", "Avenue Hassan II, Ville Nouvelle", "Agdal", 34.0394, -5.0014, 240.0, 47.0, "ACTIVE"},
+            {"BIN-0004", "Place R'cif", "Place R'cif, Fès Médina", "Fès-Médina", 34.0627, -4.9726, 360.0, 91.0, "ACTIVE"},
+            {"BIN-0005", "Gare de Fès", "Rue Lalla Asmaa, Agdal", "Agdal", 34.0454, -5.0043, 240.0, 23.0, "ACTIVE"},
+            {"BIN-0006", "Bab Semmarine", "Grande Rue de Fès Jdid", "Fès Jdid", 34.0543, -4.9900, 360.0, 64.0, "ACTIVE"},
+            {"BIN-0007", "Complexe sportif", "Route du Parc, Fès Shore", "Saïss", 34.0026, -4.9701, 360.0, 76.0, "ACTIVE"},
+            {"BIN-0008", "Bab Ftouh", "Rue Sidi Ali Boughaleb, Fès Médina", "Fès-Médina", 34.0599, -4.9653, 240.0, 15.0, "MAINTENANCE"},
+            {"BIN-0009", "Borj Fez", "Boulevard Allal El Fassi, Agdal", "Agdal", 34.0459, -4.9948, 240.0, 97.0, "ACTIVE"},
+            {"BIN-0010", "Jardin Jnan Sbil", "Avenue Moulay Hassan, Fès Jdid", "Fès Jdid", 34.0599, -4.9881, 120.0, 54.0, "ACTIVE"},
         };
 
         for (Object[] s : samples) {
@@ -97,7 +98,7 @@ public class DataInitializer implements CommandLineRunner {
             container.setCapacity((Double) s[6]);
             container.setCurrentLevel((Double) s[6] * (Double) s[7] / 100.0);
             container.setAlertThreshold(80.0);
-            container.setStatus((Double) s[7] >= 100 ? Container.Status.FULL : Container.Status.ACTIVE);
+            container.setStatus((Double) s[7] >= 100 ? Container.Status.FULL : Container.Status.valueOf((String) s[8]));
             container.calculateFillPercentage();
             containerRepository.save(container);
         }

@@ -58,7 +58,9 @@ public class MobileApiController {
         stats.put("totalCollections", historyRepository.countByActionAndTimestampAfter(
                 "COLLECTION", java.time.LocalDate.now().atStartOfDay()));
         stats.put("averageFillLevel", averageFill(all));
-        stats.put("fullContainers", all.stream().filter(c -> fill(c) >= 90).count());
+        // Same rule as the web dashboard: a bin is "to collect" once it passes its own alert threshold.
+        stats.put("fullContainers", all.stream()
+                .filter(c -> fill(c) >= (c.getAlertThreshold() != null ? c.getAlertThreshold() : 80.0)).count());
         stats.put("activeContainers", all.stream()
                 .filter(c -> c.getStatus() == com.smartwaste.model.Container.Status.ACTIVE).count());
         return ResponseEntity.ok(stats);

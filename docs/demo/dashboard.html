@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <script src="js/demo-data.js"></script>
+    <script src="js/demo.js"></script>
+    <link rel="stylesheet" href="css/demo.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex">
+    <title>Vue d'ensemble – SmartBin</title>
+    <link rel="icon" type="image/svg+xml" href="css/favicon.svg">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="css/smartbin.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</head>
+<body>
+<header class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" href="dashboard.html">
+            <svg viewBox="0 0 22 26" aria-hidden="true">
+                <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+            </svg>
+            SmartBin
+        </a>
+        <nav class="topnav" aria-label="Navigation principale">
+            <a href="dashboard.html" aria-current="page" class="is-active">Vue d'ensemble</a>
+            <a href="containers.html">Conteneurs</a>
+            <a href="alerts.html">
+                Alertes
+                <span class="count num" aria-label="3 alertes ouvertes">3</span>
+            </a>
+            <a href="reports.html">Rapports</a>
+            
+        </nav>
+        <div class="session">
+            <span>manager</span>
+            <form action="/logout" method="post">
+                <button type="submit">Se déconnecter</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="page">
+    <section class="overview" aria-labelledby="headline">
+        <h1 class="headline" id="headline">
+            
+                
+                
+                3 bacs sont à collecter.
+            
+        </h1>
+        <p class="lede">
+            <span id="summary">Sur 10 bacs suivis, remplissage moyen 64 %.</span>
+            <span class="live" id="live"><span class="live-dot" aria-hidden="true"></span><span id="live-text">Mis à jour à 01:31:08</span></span>
+        </p>
+
+        <div class="binwall is-priming" id="binwall">
+            
+                <a class="bin is-full"
+   href="container-9.html"
+   style="--fill: 97.00000000000001%; --limit: 80.0%"
+   aria-label="BIN-0009, Borj Fez, rempli à 97 %, seuil 80 %"
+   data-id="9">
+    <span class="bin__pct" aria-hidden="true"><span>97</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0009</span>
+    <span class="bin__place" aria-hidden="true">Borj Fez</span>
+</a>
+            
+                <a class="bin is-full"
+   href="container-4.html"
+   style="--fill: 91.0%; --limit: 80.0%"
+   aria-label="BIN-0004, Place R&#39;cif, rempli à 91 %, seuil 80 %"
+   data-id="4">
+    <span class="bin__pct" aria-hidden="true"><span>91</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0004</span>
+    <span class="bin__place" aria-hidden="true">Place R&#39;cif</span>
+</a>
+            
+                <a class="bin is-full"
+   href="container-2.html"
+   style="--fill: 82.0%; --limit: 80.0%"
+   aria-label="BIN-0002, Bab Boujloud, rempli à 82 %, seuil 80 %"
+   data-id="2">
+    <span class="bin__pct" aria-hidden="true"><span>82</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0002</span>
+    <span class="bin__place" aria-hidden="true">Bab Boujloud</span>
+</a>
+            
+                <a class="bin is-soon"
+   href="container-7.html"
+   style="--fill: 76.0%; --limit: 80.0%"
+   aria-label="BIN-0007, Complexe sportif, rempli à 76 %, seuil 80 %"
+   data-id="7">
+    <span class="bin__pct" aria-hidden="true"><span>76</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0007</span>
+    <span class="bin__place" aria-hidden="true">Complexe sportif</span>
+</a>
+            
+                <a class="bin is-soon"
+   href="container-6.html"
+   style="--fill: 64.0%; --limit: 80.0%"
+   aria-label="BIN-0006, Bab Semmarine, rempli à 64 %, seuil 80 %"
+   data-id="6">
+    <span class="bin__pct" aria-hidden="true"><span>64</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0006</span>
+    <span class="bin__place" aria-hidden="true">Bab Semmarine</span>
+</a>
+            
+                <a class="bin is-ok"
+   href="container-10.html"
+   style="--fill: 53.99999999999999%; --limit: 80.0%"
+   aria-label="BIN-0010, Jardin Jnan Sbil, rempli à 54 %, seuil 80 %"
+   data-id="10">
+    <span class="bin__pct" aria-hidden="true"><span>54</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0010</span>
+    <span class="bin__place" aria-hidden="true">Jardin Jnan Sbil</span>
+</a>
+            
+                <a class="bin is-ok"
+   href="container-3.html"
+   style="--fill: 47.0%; --limit: 80.0%"
+   aria-label="BIN-0003, Avenue Hassan II, rempli à 47 %, seuil 80 %"
+   data-id="3">
+    <span class="bin__pct" aria-hidden="true"><span>47</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0003</span>
+    <span class="bin__place" aria-hidden="true">Avenue Hassan II</span>
+</a>
+            
+                <a class="bin is-ok"
+   href="container-1.html"
+   style="--fill: 44.0%; --limit: 80.0%"
+   aria-label="BIN-0001, SmartBin EST Fès, rempli à 44 %, seuil 80 %"
+   data-id="1">
+    <span class="bin__pct" aria-hidden="true"><span>44</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0001</span>
+    <span class="bin__place" aria-hidden="true">SmartBin EST Fès</span>
+</a>
+            
+                <a class="bin is-ok"
+   href="container-5.html"
+   style="--fill: 23.0%; --limit: 80.0%"
+   aria-label="BIN-0005, Gare de Fès, rempli à 23 %, seuil 80 %"
+   data-id="5">
+    <span class="bin__pct" aria-hidden="true"><span>23</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0005</span>
+    <span class="bin__place" aria-hidden="true">Gare de Fès</span>
+</a>
+            
+                <a class="bin is-ok"
+   href="container-8.html"
+   style="--fill: 15.0%; --limit: 80.0%"
+   aria-label="BIN-0008, Bab Ftouh, rempli à 15 %, seuil 80 %"
+   data-id="8">
+    <span class="bin__pct" aria-hidden="true"><span>15</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" aria-hidden="true">BIN-0008</span>
+    <span class="bin__place" aria-hidden="true">Bab Ftouh</span>
+</a>
+            
+        </div>
+        <p class="binwall-note">
+            Chaque bac est dessiné à son niveau actuel, du plus plein au plus vide. La ligne pointillée marque son seuil d'alerte.
+        </p>
+        
+    </section>
+
+    <div class="split">
+        <section class="panel" aria-labelledby="queue-title">
+            <div class="panel__head">
+                <h2 id="queue-title">Tournée à prévoir</h2>
+            </div>
+            <div id="queue" data-csrf-param="_csrf" data-csrf-token="demo">
+                <div class="queue-group">
+                    <h3>Au-dessus du seuil</h3>
+                    <ul class="queue">
+                        <li class="is-full">
+                            <span>
+                                <a href="container-9.html">Borj Fez</a>
+                                <span class="sub">BIN-0009, Agdal</span>
+                            </span>
+                            <span class="pct">97%</span>
+                            <form class="inline" action="/containers/9/collect" method="post">
+                                <input type="hidden" name="back" value="dashboard">
+                                <button type="submit" class="btn btn--primary btn--sm">Marquer collecté</button>
+                            </form>
+                        </li>
+                        <li class="is-full">
+                            <span>
+                                <a href="container-4.html">Place R&#39;cif</a>
+                                <span class="sub">BIN-0004, Fès-Médina</span>
+                            </span>
+                            <span class="pct">91%</span>
+                            <form class="inline" action="/containers/4/collect" method="post">
+                                <input type="hidden" name="back" value="dashboard">
+                                <button type="submit" class="btn btn--primary btn--sm">Marquer collecté</button>
+                            </form>
+                        </li>
+                        <li class="is-full">
+                            <span>
+                                <a href="container-2.html">Bab Boujloud</a>
+                                <span class="sub">BIN-0002, Fès-Médina</span>
+                            </span>
+                            <span class="pct">82%</span>
+                            <form class="inline" action="/containers/2/collect" method="post">
+                                <input type="hidden" name="back" value="dashboard">
+                                <button type="submit" class="btn btn--primary btn--sm">Marquer collecté</button>
+                            </form>
+                        </li>
+                    </ul>
+                    
+                </div>
+                <div class="queue-group">
+                    <h3>Bientôt pleins (60 % et plus)</h3>
+                    <ul class="queue">
+                        <li class="is-soon">
+                            <span>
+                                <a href="container-7.html">Complexe sportif</a>
+                                <span class="sub">BIN-0007, Saïss</span>
+                            </span>
+                            <span class="pct">76%</span>
+                            <span></span>
+                        </li>
+                        <li class="is-soon">
+                            <span>
+                                <a href="container-6.html">Bab Semmarine</a>
+                                <span class="sub">BIN-0006, Fès Jdid</span>
+                            </span>
+                            <span class="pct">64%</span>
+                            <span></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel--flush" aria-labelledby="map-title">
+            <div class="panel__head">
+                <h2 id="map-title">Carte des bacs</h2>
+                <p>Couleur selon le remplissage</p>
+            </div>
+            <div style="padding: 16px 0 0;">
+                <div id="map" class="map" role="region" aria-label="Carte des conteneurs"></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="panel" style="margin-top: 24px;" aria-labelledby="fleet-title">
+        <div class="panel__head">
+            <h2 id="fleet-title">État du parc</h2>
+            <p>10 conteneurs</p>
+        </div>
+        <div class="fleet" aria-hidden="true">
+            <span class="f-active" style="width: 90.0%"></span>
+            <span class="f-full" style="width: 0.0%"></span>
+            <span class="f-maint" style="width: 10.0%"></span>
+            <span class="f-off" style="width: 0.0%"></span>
+        </div>
+        <ul class="fleet-legend">
+            <li><span class="swatch" style="background: var(--ok)"></span><b>9</b>actifs</li>
+            <li><span class="swatch" style="background: var(--full)"></span><b>0</b>pleins</li>
+            <li><span class="swatch" style="background: repeating-linear-gradient(135deg, var(--ink-2) 0 2px, var(--empty) 2px 4px)"></span><b>1</b>en maintenance</li>
+            <li><span class="swatch" style="background: var(--line-strong)"></span><b>0</b>inactifs</li>
+        </ul>
+    </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/map.js"></script>
+<script>
+(function () {
+    const SOON = 60;
+    const wall = document.getElementById('binwall');
+    const queueEl = document.getElementById('queue');
+    const csrfParam = queueEl.dataset.csrfParam;
+    const csrfToken = queueEl.dataset.csrfToken;
+
+    const fill = c => c.fillPercentage ?? 0;
+    const limit = c => c.alertThreshold ?? 80;
+    const state = c => fill(c) >= limit(c) ? 'is-full' : (fill(c) >= SOON ? 'is-soon' : 'is-ok');
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const pct = n => Math.round(n);
+
+    // One load moment: the bins fill up once the page is painted.
+    if (wall) requestAnimationFrame(() => requestAnimationFrame(() => wall.classList.remove('is-priming')));
+
+    // Map (SmartBinMap in /js/map.js: starts on Fès, falls back to OSM tiles, survives a missing CDN)
+    const map = SmartBinMap.create(document.getElementById('map'), 13);
+    const markers = new Map();
+
+    function drawMarkers(containers) {
+        const pts = [];
+        if (!map) return pts;
+        containers.forEach(c => {
+            if (c.latitude == null || c.longitude == null) return;
+            const icon = SmartBinMap.dot(state(c));
+            const popup = `<b>${esc(c.name)}</b><br>${esc(c.containerId)}, ${pct(fill(c))} % rempli<br><a href="/containers/${c.id}">Voir le bac</a>`;
+            let m = markers.get(c.id);
+            if (m) { m.setLatLng([c.latitude, c.longitude]).setIcon(icon).setPopupContent(popup); }
+            else { m = L.marker([c.latitude, c.longitude], { icon, title: c.name }).bindPopup(popup).addTo(map); markers.set(c.id, m); }
+            pts.push([c.latitude, c.longitude]);
+        });
+        return pts;
+    }
+
+    function headline(n) {
+        if (n === 0) return 'Aucun bac à collecter.';
+        if (n === 1) return '1 bac est à collecter.';
+        return `${n} bacs sont à collecter.`;
+    }
+
+    function queueItem(c, withAction) {
+        const action = withAction
+            ? `<form class="inline" action="/containers/${c.id}/collect" method="post">
+                 <input type="hidden" name="${esc(csrfParam)}" value="${esc(csrfToken)}">
+                 <input type="hidden" name="back" value="dashboard">
+                 <button type="submit" class="btn btn--primary btn--sm">Marquer collecté</button></form>`
+            : '<span></span>';
+        return `<li class="${state(c)}"><span><a href="/containers/${c.id}">${esc(c.name)}</a>
+                <span class="sub">${esc(c.containerId)}, ${esc(c.region)}</span></span>
+                <span class="pct">${pct(fill(c))}%</span>${action}</li>`;
+    }
+
+    function render(containers) {
+        const due = containers.filter(c => fill(c) >= limit(c)).sort((a, b) => fill(b) - fill(a));
+        const soon = containers.filter(c => fill(c) >= SOON && fill(c) < limit(c)).sort((a, b) => fill(b) - fill(a));
+        const avg = containers.length ? containers.reduce((s, c) => s + fill(c), 0) / containers.length : 0;
+
+        document.getElementById('headline').textContent = headline(due.length);
+        document.getElementById('summary').textContent =
+            `Sur ${containers.length} bacs suivis, remplissage moyen ${pct(avg)} %.`;
+
+        containers.forEach(c => {
+            const el = wall && wall.querySelector(`.bin[data-id="${c.id}"]`);
+            if (!el) return;
+            el.classList.remove('is-ok', 'is-soon', 'is-full');
+            el.classList.add(state(c));
+            el.style.setProperty('--fill', Math.min(fill(c), 100) + '%');
+            el.style.setProperty('--limit', limit(c) + '%');
+            el.querySelector('.bin__pct > span').textContent = pct(fill(c));
+            el.setAttribute('aria-label', `${c.containerId}, ${c.name}, rempli à ${pct(fill(c))} %, seuil ${pct(limit(c))} %`);
+        });
+
+        document.getElementById('queue').innerHTML =
+            `<div class="queue-group"><h3>Au-dessus du seuil</h3>` +
+            (due.length ? `<ul class="queue">${due.map(c => queueItem(c, true)).join('')}</ul>`
+                        : `<p class="empty">Aucun bac n'a dépassé son seuil.</p>`) + `</div>` +
+            (soon.length ? `<div class="queue-group"><h3>Bientôt pleins (60 % et plus)</h3>
+                <ul class="queue">${soon.map(c => queueItem(c, false)).join('')}</ul></div>` : '');
+
+        drawMarkers(containers);
+    }
+
+    const live = document.getElementById('live');
+    async function refresh(first) {
+        try {
+            const res = await fetch('/dashboard/data/containers', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error(res.status);
+            const containers = await res.json();
+            if (wall && containers.length !== wall.querySelectorAll('.bin').length) { location.reload(); return; }
+            render(containers);
+            if (first && map) {
+                const pts = containers.filter(c => c.latitude != null && c.longitude != null)
+                                      .map(c => [c.latitude, c.longitude]);
+                if (pts.length > 1) map.fitBounds(pts, { padding: [36, 36], maxZoom: 15 });
+                else if (pts.length === 1) map.setView(pts[0], 15);
+            }
+            live.classList.remove('is-stale');
+            document.getElementById('live-text').textContent =
+                'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
+        } catch (e) {
+            live.classList.add('is-stale');
+            document.getElementById('live-text').textContent = 'Connexion perdue, nouvel essai dans 10 s';
+        }
+    }
+    refresh(true);
+    setInterval(() => refresh(false), 10000);
+})();
+</script>
+</body>
+</html>

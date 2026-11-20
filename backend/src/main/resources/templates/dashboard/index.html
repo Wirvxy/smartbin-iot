@@ -106,6 +106,7 @@
 </main>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script th:src="@{/js/map.js}" src="/js/map.js"></script>
 <script>
 (function () {
     const SOON = 60;
@@ -117,36 +118,22 @@
     const fill = c => c.fillPercentage ?? 0;
     const limit = c => c.alertThreshold ?? 80;
     const state = c => fill(c) >= limit(c) ? 'is-full' : (fill(c) >= SOON ? 'is-soon' : 'is-ok');
-    const colour = s => getComputedStyle(document.documentElement)
-        .getPropertyValue(s === 'is-full' ? '--full' : s === 'is-soon' ? '--soon' : '--ok');
     const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
     const pct = n => Math.round(n);
 
     // One load moment: the bins fill up once the page is painted.
     if (wall) requestAnimationFrame(() => requestAnimationFrame(() => wall.classList.remove('is-priming')));
 
-    // Map (skipped if the Leaflet CDN can't be reached; the rest of the page keeps updating)
-    const hasMap = !!window.L;
-    const map = hasMap && L.map('map', {
-        maxBounds: L.latLngBounds([20.5, -17.6], [36.2, -0.9]),
-        maxBoundsViscosity: 1.0, minZoom: 5, maxZoom: 18, scrollWheelZoom: false
-    }).setView([33.6, -6.5], 6);
-    if (hasMap) {
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd'
-        }).addTo(map);
-    } else {
-        document.getElementById('map').innerHTML = '<p class="empty" style="padding: 24px;">La carte n\'a pas pu se charger. Vérifiez la connexion Internet.</p>';
-    }
+    // Map (SmartBinMap in /js/map.js: starts on Fès, falls back to OSM tiles, survives a missing CDN)
+    const map = SmartBinMap.create(document.getElementById('map'), 13);
     const markers = new Map();
 
     function drawMarkers(containers) {
         const pts = [];
-        if (!hasMap) return pts;
+        if (!map) return pts;
         containers.forEach(c => {
             if (c.latitude == null || c.longitude == null) return;
-            const s = state(c);
-            const icon = L.divIcon({ className: '', html: `<div class="map-dot" style="--c:${colour(s)}"></div>`, iconSize: [16, 16] });
+            const icon = SmartBinMap.dot(state(c));
             const popup = `<b>${esc(c.name)}</b><br>${esc(c.containerId)}, ${pct(fill(c))} % rempli<br><a href="/containers/${c.id}">Voir le bac</a>`;
             let m = markers.get(c.id);
             if (m) { m.setLatLng([c.latitude, c.longitude]).setIcon(icon).setPopupContent(popup); }
@@ -211,13 +198,12 @@
             if (!res.ok) throw new Error(res.status);
             const containers = await res.json();
             if (wall && containers.length !== wall.querySelectorAll('.bin').length) { location.reload(); return; }
-            if (first) {
-                const pts = drawMarkers(containers);
-                if (!hasMap) { /* nothing to fit */ }
-                else if (pts.length > 1) map.fitBounds(pts, { padding: [40, 40] });
-                else if (pts.length === 1) map.setView(pts[0], 14);
-            } else {
-                render(containers);
+            render(containers);
+            if (first && map) {
+                const pts = containers.filter(c => c.latitude != null && c.longitude != null)
+                                      .map(c => [c.latitude, c.longitude]);
+                if (pts.length > 1) map.fitBounds(pts, { padding: [36, 36], maxZoom: 15 });
+                else if (pts.length === 1) map.setView(pts[0], 15);
             }
             live.classList.remove('is-stale');
             document.getElementById('live-text').textContent =

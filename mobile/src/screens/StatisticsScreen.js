@@ -1,306 +1,120 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl, Pressable } from 'react-native';
 import { getDailyStatistics, getRegionStatistics } from '../api/statisticsService';
+import { getAllContainers, getContainersByRegion } from '../api/containerService';
 import { useRegion } from '../context/RegionContext';
-import { COLORS } from '../utils/constants';
+import { C, F, R } from '../theme';
+import { Panel } from '../components/ui';
+import BinGauge from '../components/BinGauge';
 
-export default function StatisticsScreen() {
+/**
+ * The district at a glance: every bin as a gauge (fullest first, like the web dashboard),
+ * then the day's figures for the district and for the whole city.
+ */
+export default function StatisticsScreen({ navigation }) {
   const { selectedRegion } = useRegion();
-  const [dailyStats, setDailyStats] = useState(null);
+  const [daily, setDaily] = useState(null);
   const [regionStats, setRegionStats] = useState(null);
+  const [bins, setBins] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    loadStatistics();
-  }, [selectedRegion]);
-
-  async function loadStatistics() {
+  const load = useCallback(async () => {
     try {
-      const daily = await getDailyStatistics();
-      setDailyStats(daily);
-
-      if (selectedRegion) {
-        const region = await getRegionStatistics(selectedRegion.id);
-        setRegionStats(region);
-      }
-    } catch (error) {
-      console.error('Erreur chargement statistiques:', error);
+      const [d, list] = await Promise.all([
+        getDailyStatistics(),
+        selectedRegion ? getContainersByRegion(selectedRegion.id) : getAllContainers(),
+      ]);
+      setDaily(d);
+      setBins([...list].sort((a, b) => b.fillLevel - a.fillLevel));
+      setRegionStats(selectedRegion ? await getRegionStatistics(selectedRegion.id) : null);
+    } catch (e) {
+      // keep the last values on screen
     } finally {
       setIsLoading(false);
       setRefreshing(false);
     }
-  }
+  }, [selectedRegion]);
 
-  function onRefresh() {
-    setRefreshing(true);
-    loadStatistics();
-  }
+  useEffect(() => { load(); }, [load]);
 
   if (isLoading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={COLORS.primary} />
-        <Text style={styles.loadingText}>Chargement des statistiques...</Text>
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" color={C.ink} /></View>;
   }
+
+  const due = bins.filter((c) => c.fillLevel >= (c.threshold ?? 80)).length;
+  const place = selectedRegion?.name ?? 'Fès';
 
   return (
     <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          colors={[COLORS.primary]}
-          tintColor={COLORS.primary}
-        />
-      }
+      style={styles.screen}
+      contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={C.ink} colors={[C.ink]} />}
     >
-      <View style={styles.header}>
-        <Text style={styles.title}>Tableau de bord</Text>
-        <Text style={styles.subtitle}>
-          Statistiques {selectedRegion ? `- ${selectedRegion.name}` : 'globales'}
-        </Text>
-      </View>
+      <Text style={styles.headline}>
+        {due === 0 ? `Aucun bac à collecter à ${place}.` : `${due} bac${due > 1 ? 's' : ''} à collecter à ${place}.`}
+      </Text>
+      <Text style={styles.lede}>Chaque bac est dessiné à son niveau actuel. La ligne pointillée marque son seuil d'alerte.</Text>
 
-      {/* Statistiques journalières */}
-      {dailyStats && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Statistiques du jour</Text>
-          <View style={styles.statsGrid}>
-            <StatCard
-              label="Collectes"
-              value={dailyStats.totalCollections ?? '--'}
-              icon="🚛"
-              color={COLORS.primary}
-            />
-            <StatCard
-              label="Remplissage moyen"
-              value={
-                dailyStats.averageFillLevel != null
-                  ? `${Math.round(dailyStats.averageFillLevel)}%`
-                  : '--'
-              }
-              icon="📊"
-              color={COLORS.secondary}
-            />
-            <StatCard
-              label="Conteneurs pleins"
-              value={dailyStats.fullContainers ?? '--'}
-              icon="🔴"
-              color={COLORS.error}
-            />
-            <StatCard
-              label="Conteneurs actifs"
-              value={dailyStats.activeContainers ?? '--'}
-              icon="✅"
-              color={COLORS.success}
-            />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.wall}>
+        {bins.map((c) => (
+          <Pressable key={c.id} onPress={() => navigation.navigate('ContainerDetail', { container: c })}
+                     accessibilityRole="button" accessibilityLabel={`${c.name}, rempli à ${c.fillLevel} %`}
+                     style={{ alignItems: 'center', width: 70 }}>
+            <BinGauge fill={c.fillLevel} threshold={c.threshold ?? 80} size={56} />
+            <Text style={styles.binCode}>{c.code}</Text>
+            <Text style={styles.binName} numberOfLines={1}>{c.name}</Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+
+      {regionStats && (
+        <Panel style={{ marginTop: 20 }}>
+          <Text style={styles.panelTitle}>{selectedRegion.name}</Text>
+          <View style={styles.grid}>
+            <Figure value={regionStats.totalContainers} label="bacs suivis" />
+            <Figure value={`${Math.round(regionStats.averageFillLevel ?? 0)} %`} label="remplissage moyen" />
+            <Figure value={regionStats.alerts ?? 0} label="au-dessus du seuil" tone={regionStats.alerts ? C.fullInk : undefined} />
+            <Figure value={regionStats.collectionsToday ?? 0} label="collectes aujourd'hui" />
           </View>
-        </View>
+        </Panel>
       )}
 
-      {/* Statistiques par région */}
-      {regionStats && selectedRegion && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>
-            Statistiques - {selectedRegion.name}
-          </Text>
-          <View style={styles.statsGrid}>
-            <StatCard
-              label="Conteneurs"
-              value={regionStats.totalContainers ?? '--'}
-              icon="🗑️"
-              color={COLORS.primary}
-            />
-            <StatCard
-              label="Remplissage moyen"
-              value={
-                regionStats.averageFillLevel != null
-                  ? `${Math.round(regionStats.averageFillLevel)}%`
-                  : '--'
-              }
-              icon="📈"
-              color={COLORS.secondary}
-            />
-            <StatCard
-              label="Collectes aujourd'hui"
-              value={regionStats.collectionsToday ?? '--'}
-              icon="📅"
-              color={COLORS.warning}
-            />
-            <StatCard
-              label="Alertes"
-              value={regionStats.alerts ?? '--'}
-              icon="⚠️"
-              color={COLORS.error}
-            />
+      {daily && (
+        <Panel style={{ marginTop: 16 }}>
+          <Text style={styles.panelTitle}>Toute la ville</Text>
+          <View style={styles.grid}>
+            <Figure value={`${Math.round(daily.averageFillLevel ?? 0)} %`} label="remplissage moyen" />
+            <Figure value={daily.fullContainers ?? 0} label="à collecter" tone={daily.fullContainers ? C.fullInk : undefined} />
+            <Figure value={daily.activeContainers ?? 0} label="bacs en service" />
+            <Figure value={daily.totalCollections ?? 0} label="collectes aujourd'hui" />
           </View>
-        </View>
-      )}
-
-      {/* Indicateur de remplissage global */}
-      {dailyStats?.averageFillLevel != null && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Niveau de remplissage global</Text>
-          <View style={styles.globalGauge}>
-            <View style={styles.gaugeBackground}>
-              <View
-                style={[
-                  styles.gaugeFill,
-                  {
-                    width: `${dailyStats.averageFillLevel}%`,
-                    backgroundColor:
-                      dailyStats.averageFillLevel < 70
-                        ? COLORS.fillLow
-                        : dailyStats.averageFillLevel < 90
-                        ? COLORS.fillMedium
-                        : COLORS.fillHigh,
-                  },
-                ]}
-              />
-            </View>
-            <Text style={styles.gaugeLabel}>
-              {Math.round(dailyStats.averageFillLevel)}% en moyenne
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {!dailyStats && !regionStats && (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>📊</Text>
-          <Text style={styles.emptyText}>Aucune statistique disponible</Text>
-        </View>
+        </Panel>
       )}
     </ScrollView>
   );
 }
 
-function StatCard({ label, value, icon, color }) {
+function Figure({ value, label, tone }) {
   return (
-    <View style={styles.statCard}>
-      <Text style={styles.statIcon}>{icon}</Text>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
+    <View style={styles.figure}>
+      <Text style={[styles.figureValue, tone && { color: tone }]}>{value}</Text>
+      <Text style={styles.figureLabel}>{label}</Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: COLORS.background,
-  },
-  loadingText: {
-    marginTop: 12,
-    color: COLORS.textSecondary,
-    fontSize: 16,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLORS.text,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-  },
-  section: {
-    backgroundColor: COLORS.surface,
-    margin: 16,
-    marginTop: 8,
-    borderRadius: 16,
-    padding: 20,
-    elevation: 2,
-    shadowColor: COLORS.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginBottom: 16,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  statCard: {
-    width: '47%',
-    backgroundColor: COLORS.background,
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-  },
-  statIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  statValue: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: COLORS.textSecondary,
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  globalGauge: {
-    alignItems: 'center',
-  },
-  gaugeBackground: {
-    width: '100%',
-    height: 20,
-    backgroundColor: COLORS.lightGrey,
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  gaugeFill: {
-    height: '100%',
-    borderRadius: 10,
-  },
-  gaugeLabel: {
-    fontSize: 14,
-    color: COLORS.textSecondary,
-    marginTop: 8,
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyIcon: {
-    fontSize: 48,
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
+  screen: { flex: 1, backgroundColor: C.bg },
+  centered: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: C.bg },
+  headline: { fontFamily: F.display, fontSize: 32, lineHeight: 35, color: C.ink },
+  lede: { fontFamily: F.regular, fontSize: 15, lineHeight: 21, color: C.ink2, marginTop: 8 },
+  wall: { gap: 10, paddingVertical: 20, paddingRight: 8, alignItems: 'flex-end' },
+  binCode: { fontFamily: F.display, fontSize: 14, color: C.ink, marginTop: 8 },
+  binName: { fontFamily: F.regular, fontSize: 12, color: C.muted, maxWidth: 70 },
+  panelTitle: { fontFamily: F.display, fontSize: 22, color: C.ink, marginBottom: 12 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 16 },
+  figure: { width: '50%', borderTopWidth: 1, borderTopColor: C.line, paddingTop: 8, paddingRight: 12 },
+  figureValue: { fontFamily: F.display, fontSize: 28, color: C.ink, fontVariant: ['tabular-nums'] },
+  figureLabel: { fontFamily: F.regular, fontSize: 14, color: C.muted },
 });
