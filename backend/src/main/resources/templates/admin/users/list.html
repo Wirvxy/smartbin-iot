@@ -1,74 +1,68 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Utilisateurs - Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{})}">
+    <title>Utilisateurs – SmartBin</title>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>Gestion des Utilisateurs</h2>
-            <a th:href="@{/admin/users/create}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Ajouter un utilisateur
-            </a>
+<header th:replace="~{layout/base :: topbar('users')}"></header>
+
+<main class="page">
+    <div class="pagehead">
+        <div>
+            <h1>Utilisateurs</h1>
+            <p>Les comptes qui peuvent se connecter au tableau de bord. Chaque tentative de connexion est enregistrée.</p>
         </div>
-        
-        <div class="card">
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nom d'utilisateur</th>
-                            <th>Email</th>
-                            <th>Nom complet</th>
-                            <th>Rôle</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="user : ${users}">
-                            <td th:text="${user.id}"></td>
-                            <td th:text="${user.username}"></td>
-                            <td th:text="${user.email}"></td>
-                            <td th:text="${user.firstName + ' ' + user.lastName}"></td>
-                            <td>
-                                <span class="badge bg-info" th:text="${user.role}"></span>
-                            </td>
-                            <td>
-                                <span class="badge" 
-                                      th:classappend="${user.enabled} ? 'bg-success' : 'bg-danger'"
-                                      th:text="${user.enabled ? 'Actif' : 'Inactif'}">
-                                </span>
-                            </td>
-                            <td>
-                                <a th:href="@{/admin/users/edit/{id}(id=${user.id})}" 
-                                   class="btn btn-sm btn-warning">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <a th:href="@{/admin/users/{id}/history(id=${user.id})}" 
-                                   class="btn btn-sm btn-info">
-                                    <i class="bi bi-clock-history"></i>
-                                </a>
-                                <form th:action="@{/admin/users/delete/{id}(id=${user.id})}" 
-                                      method="post" style="display: inline;">
-                                    <button type="submit" class="btn btn-sm btn-danger" 
-                                            onclick="return confirm('Êtes-vous sûr?')">
-                                        <i class="bi bi-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="actions">
+            <a th:href="@{/admin/users/create}" class="btn btn--primary"><i class="bi bi-plus-lg" aria-hidden="true"></i>Ajouter un utilisateur</a>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <div class="panel panel--flush">
+        <div class="table-wrap">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Utilisateur</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Rôle</th>
+                    <th scope="col">Compte</th>
+                    <th scope="col">Dernière connexion</th>
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td>
+                        <strong th:text="${u.username}">admin</strong>
+                        <span class="sub" th:text="${#strings.trim((u.firstName ?: '') + ' ' + (u.lastName ?: ''))}">Nom complet</span>
+                    </td>
+                    <td th:text="${u.email}">mail</td>
+                    <td th:switch="${u.role != null ? u.role.name() : ''}">
+                        <span th:case="'ADMIN'">Administrateur</span>
+                        <span th:case="'MANAGER'">Gestionnaire</span>
+                        <span th:case="'EMPLOYEE'">Agent</span>
+                        <span th:case="*">—</span>
+                    </td>
+                    <td>
+                        <span th:if="${u.enabled}" class="pill pill--ok">Actif</span>
+                        <span th:unless="${u.enabled}" class="pill pill--off">Désactivé</span>
+                    </td>
+                    <td class="num" th:text="${u.lastLogin != null} ? ${#temporals.format(u.lastLogin, 'dd/MM/yyyy HH:mm')} : 'Jamais'">Jamais</td>
+                    <td class="actions">
+                        <a class="btn btn--sm" th:href="@{/admin/users/{id}/history(id=${u.id})}">Connexions</a>
+                        <a class="btn btn--sm" th:href="@{/admin/users/edit/{id}(id=${u.id})}">Modifier</a>
+                        <form class="inline" th:action="@{/admin/users/delete/{id}(id=${u.id})}" method="post"
+                              th:data-name="${u.username}" onsubmit="return confirm('Supprimer le compte « ' + this.dataset.name + ' » ?')">
+                            <button type="submit" class="btn btn--sm btn--icon btn--danger" th:aria-label="|Supprimer ${u.username}|">
+                                <i class="bi bi-trash3" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</main>
 </body>
 </html>

@@ -14,7 +14,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -116,8 +115,9 @@ public class SecurityConfig {
                 .failureHandler(loginAuditHandler)
                 .permitAll()
             )
+            // Logout is a POST with the CSRF token (Spring's default). It used to accept GET,
+            // so any page could log a user out with a simple <img src="/logout">.
             .logout(logout -> logout
-                .logoutRequestMatcher(new AntPathRequestMatcher("/logout", "GET"))
                 .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
             );

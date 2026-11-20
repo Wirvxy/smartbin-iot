@@ -8,6 +8,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -24,8 +25,24 @@ public class DashboardController {
 
     @GetMapping({"/", "/dashboard"})
     public String dashboard(Model model) {
+        // Fullest bins first: the overview is a collection to-do list.
+        List<ContainerDTO> containers = containerService.getAllContainers().stream()
+                .sorted(Comparator.comparingDouble(DashboardController::fill).reversed())
+                .toList();
         model.addAttribute("stats", dashboardService.getDashboardStats());
+        model.addAttribute("containers", containers);
+        model.addAttribute("due", containers.stream().filter(c -> fill(c) >= threshold(c)).toList());
+        model.addAttribute("soon", containers.stream()
+                .filter(c -> fill(c) >= 60 && fill(c) < threshold(c)).toList());
         return "dashboard/index";
+    }
+
+    private static double fill(ContainerDTO c) {
+        return c.getFillPercentage() != null ? c.getFillPercentage() : 0.0;
+    }
+
+    private static double threshold(ContainerDTO c) {
+        return c.getAlertThreshold() != null ? c.getAlertThreshold() : 80.0;
     }
 
     /**

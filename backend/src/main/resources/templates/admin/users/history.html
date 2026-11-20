@@ -1,56 +1,59 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historique de connexion - Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{})}">
+    <title th:text="|Connexions de ${user.username} – SmartBin|">Connexions – SmartBin</title>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>
-                <i class="bi bi-shield-lock"></i>
-                Historique de connexion :
-                <span th:text="${user.username}">user</span>
-            </h2>
-            <a th:href="@{/admin/users}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Retour
-            </a>
-        </div>
+<header th:replace="~{layout/base :: topbar('users')}"></header>
 
-        <div class="card">
-            <div class="card-body">
-                <div th:if="${history.isEmpty()}" class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> Aucune connexion enregistrée pour cet utilisateur.
-                </div>
-
-                <table class="table table-hover" th:if="${!history.isEmpty()}">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Résultat</th>
-                            <th>Adresse IP</th>
-                            <th>Navigateur</th>
-                            <th>Motif d'échec</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="entry : ${history}" th:classappend="${!entry.success} ? 'table-danger'">
-                            <td th:text="${#temporals.format(entry.loginTime, 'dd/MM/yyyy HH:mm:ss')}"></td>
-                            <td>
-                                <span th:if="${entry.success}" class="badge bg-success">Succès</span>
-                                <span th:unless="${entry.success}" class="badge bg-danger">Échec</span>
-                            </td>
-                            <td th:text="${entry.ipAddress}"></td>
-                            <td class="text-truncate" style="max-width: 320px;" th:text="${entry.userAgent}"></td>
-                            <td th:text="${entry.failureReason}"></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+<main class="page">
+    <a class="crumb" th:href="@{/admin/users}"><i class="bi bi-arrow-left" aria-hidden="true"></i>Tous les utilisateurs</a>
+    <div class="pagehead">
+        <div>
+            <h1 th:text="|Connexions de ${user.username}|">Connexions</h1>
+            <p th:with="failed=${history.?[!success].size()}"
+               th:text="${history.isEmpty()} ? 'Aucune tentative enregistrée.' : (${failed == 0} ? |${history.size()} tentative(s), toutes réussies.| : |${history.size()} tentative(s), dont ${failed} échouée(s). Plusieurs échecs rapprochés depuis la même adresse peuvent signaler une attaque par force brute.|)">
+                0 tentatives.
+            </p>
         </div>
     </div>
+
+    <div class="panel panel--flush">
+        <div class="table-wrap" th:if="${!history.isEmpty()}">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th scope="col">Date</th>
+                    <th scope="col">Résultat</th>
+                    <th scope="col">Adresse IP</th>
+                    <th scope="col">Navigateur</th>
+                    <th scope="col">Motif de l'échec</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="e : ${history}" th:classappend="${!e.success} ? 'is-failed'">
+                    <td class="num" th:text="${#temporals.format(e.loginTime, 'dd/MM/yyyy HH:mm:ss')}">01/01/2026</td>
+                    <td>
+                        <span th:if="${e.success}" class="pill pill--ok">Réussie</span>
+                        <span th:unless="${e.success}" class="pill pill--full">Échouée</span>
+                    </td>
+                    <td class="num" th:text="${e.ipAddress}">127.0.0.1</td>
+                    <td style="max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"
+                        th:text="${e.userAgent}" th:title="${e.userAgent}">navigateur</td>
+                    <td><th:block th:if="${e.failureReason != null}"><th:block th:switch="${e.failureReason}">
+                        <th:block th:case="'BadCredentialsException'">Mot de passe ou identifiant incorrect</th:block>
+                        <th:block th:case="'DisabledException'">Compte désactivé</th:block>
+                        <th:block th:case="'LockedException'">Compte verrouillé</th:block>
+                        <th:block th:case="*" th:text="${e.failureReason}">autre</th:block>
+                    </th:block></th:block></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <th:block th:if="${history.isEmpty()}">
+            <div th:replace="~{fragments/header :: empty('Aucune connexion enregistrée.', 'Les tentatives de ce compte apparaîtront ici, réussies ou non.')}"></div>
+        </th:block>
+    </div>
+</main>
 </body>
 </html>

@@ -1,114 +1,94 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" 
+<!--
+    Shared fragments for every dashboard page.
+    head(title, extra)   : <head> with fonts, icons and the SmartBin stylesheet
+    topbar(active)       : top navigation; active = dashboard | containers | alerts | reports | users
+    bin(c)               : one bin gauge (fill + alert threshold), links to the container
+    meter(c)             : compact horizontal fill meter for tables
+    status(s)            : container status pill
+-->
+<html lang="fr" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
+<head th:fragment="head(title, extra)">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${title != null ? title + ' - Smart Waste Dashboard' : 'Smart Waste Dashboard'}">Smart Waste Dashboard</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <style>
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-        }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 0.75rem 1rem;
-            margin: 0.25rem 0;
-            border-radius: 0.5rem;
-        }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            color: #fff;
-            background-color: rgba(255,255,255,0.1);
-        }
-        .main-content {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-        }
-        .card-stat {
-            border-left: 4px solid;
-        }
-        .card-stat.primary { border-left-color: #0d6efd; }
-        .card-stat.success { border-left-color: #198754; }
-        .card-stat.warning { border-left-color: #ffc107; }
-        .card-stat.danger { border-left-color: #dc3545; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:replace="${title}">SmartBin</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/css/favicon.svg}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" th:href="@{/css/smartbin.css}">
+    <th:block th:replace="${extra}"></th:block>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 sidebar p-3" sec:authorize="isAuthenticated()">
-                <div class="text-white mb-4">
-                    <h4><i class="bi bi-trash3"></i> Smart Waste</h4>
-                </div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/dashboard}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/containers}">
-                            <i class="bi bi-box-seam"></i> Conteneurs
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a class="nav-link" th:href="@{/admin/users}">
-                            <i class="bi bi-people"></i> Utilisateurs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/reports}">
-                            <i class="bi bi-file-earmark-text"></i> Rapports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/alerts}">
-                            <i class="bi bi-bell"></i> Alertes
-                        </a>
-                    </li>
-                </ul>
-                <div class="mt-auto pt-3">
-                    <div class="text-white-50 small mb-2" sec:authentication="name"></div>
-                    <a class="nav-link text-danger" th:href="@{/logout}">
-                        <i class="bi bi-box-arrow-right"></i> Déconnexion
-                    </a>
-                </div>
-            </nav>
-            
-            <!-- Main Content -->
-            <main class="col-md-9 col-lg-10 ms-sm-auto main-content p-4" th:if="${#httpServletRequest.requestURI != '/login'}">
-                <div th:replace="~{fragments/header :: header}"></div>
-                <div th:replace="${content}"></div>
-            </main>
-            
-            <!-- Login/Public Content -->
-            <main class="col-12" th:if="${#httpServletRequest.requestURI == '/login'}">
-                <div th:replace="${content}"></div>
-            </main>
+
+<header th:fragment="topbar(active)" class="topbar">
+    <div class="topbar__inner">
+        <a class="brand" th:href="@{/dashboard}">
+            <svg viewBox="0 0 22 26" aria-hidden="true">
+                <rect x="0" y="0" width="22" height="4" rx="2" fill="currentColor"/>
+                <path d="M2 6h18l-1.6 20H3.6z" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M3.2 16h15.6l-.8 10H4z" fill="currentColor"/>
+            </svg>
+            SmartBin
+        </a>
+        <nav class="topnav" aria-label="Navigation principale">
+            <a th:href="@{/dashboard}" th:classappend="${active == 'dashboard'} ? 'is-active'"
+               th:aria-current="${active == 'dashboard'} ? 'page'">Vue d'ensemble</a>
+            <a th:href="@{/containers}" th:classappend="${active == 'containers'} ? 'is-active'"
+               th:aria-current="${active == 'containers'} ? 'page'">Conteneurs</a>
+            <a th:href="@{/alerts}" th:classappend="${active == 'alerts'} ? 'is-active'"
+               th:aria-current="${active == 'alerts'} ? 'page'">
+                Alertes
+                <span class="count num" th:if="${openAlerts != null and openAlerts > 0}" th:text="${openAlerts}"
+                      th:aria-label="|${openAlerts} alertes ouvertes|">0</span>
+            </a>
+            <a th:href="@{/reports}" th:classappend="${active == 'reports'} ? 'is-active'"
+               th:aria-current="${active == 'reports'} ? 'page'">Rapports</a>
+            <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'is-active'"
+               th:aria-current="${active == 'users'} ? 'page'">Utilisateurs</a>
+        </nav>
+        <div class="session">
+            <span sec:authentication="name">admin</span>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit">Se déconnecter</button>
+            </form>
         </div>
     </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- SockJS and STOMP for WebSocket -->
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
-    
-    <div th:replace="${scripts}"></div>
+</header>
+
+<a th:fragment="bin(c)" class="bin"
+   th:with="pct=${c.fillPercentage ?: 0}, lim=${c.alertThreshold ?: 80}"
+   th:href="@{/containers/{id}(id=${c.id})}"
+   th:classappend="${pct >= lim} ? 'is-full' : (${pct >= 60} ? 'is-soon' : 'is-ok')"
+   th:style="|--fill: ${pct > 100 ? 100 : pct}%; --limit: ${lim}%|"
+   th:aria-label="|${c.containerId}, ${c.name}, rempli à ${#numbers.formatDecimal(pct, 1, 0)} %, seuil ${#numbers.formatDecimal(lim, 1, 0)} %|"
+   th:data-id="${c.id}">
+    <span class="bin__pct" aria-hidden="true"><span th:text="${#numbers.formatDecimal(pct, 1, 0)}">0</span><small>%</small></span>
+    <span class="bin__lid" aria-hidden="true"></span>
+    <span class="bin__body" aria-hidden="true">
+        <span class="bin__fill"></span>
+        <span class="bin__limit"></span>
+    </span>
+    <span class="bin__id" th:text="${c.containerId}" aria-hidden="true">BIN-0001</span>
+    <span class="bin__place" th:text="${c.name}" aria-hidden="true">Nom</span>
+</a>
+
+<span th:fragment="meter(c)" class="meter"
+      th:with="pct=${c.fillPercentage ?: 0}, lim=${c.alertThreshold ?: 80}"
+      th:classappend="${pct >= lim} ? 'is-full' : (${pct >= 60} ? 'is-soon' : 'is-ok')">
+    <span class="meter__track" aria-hidden="true">
+        <span class="meter__fill" th:style="|width: ${pct > 100 ? 100 : pct}%|"></span>
+        <span class="meter__limit" th:style="|left: ${lim}%|"></span>
+    </span>
+    <span class="meter__value" th:text="|${#numbers.formatDecimal(pct, 1, 0)}%|">0%</span>
+</span>
+
+<th:block th:fragment="status(s)" th:switch="${s != null ? s.name() : ''}">
+    <span th:case="'ACTIVE'" class="pill pill--ok">Actif</span>
+    <span th:case="'FULL'" class="pill pill--full">Plein</span>
+    <span th:case="'MAINTENANCE'" class="pill pill--maint">En maintenance</span>
+    <span th:case="'INACTIVE'" class="pill pill--off">Inactif</span>
+    <span th:case="*" class="pill pill--off">Inconnu</span>
+</th:block>
+
 </body>
 </html>

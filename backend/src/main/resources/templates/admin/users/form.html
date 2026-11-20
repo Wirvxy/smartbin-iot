@@ -1,68 +1,74 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${user.id != null ? 'Modifier' : 'Créer'} + ' Utilisateur - Smart Waste'">Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{})}">
+    <title th:text="${user.id != null} ? |Modifier ${user.username} – SmartBin| : 'Nouvel utilisateur – SmartBin'">Utilisateur – SmartBin</title>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 th:text="${user.id != null ? 'Modifier l''utilisateur' : 'Créer un nouvel utilisateur'}"></h4>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="${user.id != null ? '/admin/users/edit/' + user.id : '/admin/users/create'}" 
-                              th:object="${user}" method="post">
-                            <div class="mb-3">
-                                <label class="form-label">Nom d'utilisateur</label>
-                                <input type="text" class="form-control" th:field="*{username}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Email</label>
-                                <input type="email" class="form-control" th:field="*{email}" required>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Prénom</label>
-                                    <input type="text" class="form-control" th:field="*{firstName}">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Nom</label>
-                                    <input type="text" class="form-control" th:field="*{lastName}">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Rôle</label>
-                                <select class="form-select" th:field="*{role}">
-                                    <option value="ADMIN">Administrateur</option>
-                                    <option value="MANAGER">Gestionnaire</option>
-                                    <option value="EMPLOYEE">Employé</option>
-                                </select>
-                            </div>
-                            <div class="mb-3" th:if="${user.id == null}">
-                                <label class="form-label">Mot de passe</label>
-                                <input type="password" class="form-control" name="password" required>
-                            </div>
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" th:field="*{enabled}" id="enabled">
-                                <label class="form-check-label" for="enabled">Compte activé</label>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <a th:href="@{/admin/users}" class="btn btn-secondary">Annuler</a>
-                                <button type="submit" class="btn btn-primary">Enregistrer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+<header th:replace="~{layout/base :: topbar('users')}"></header>
+
+<main class="page page--narrow">
+    <a class="crumb" th:href="@{/admin/users}"><i class="bi bi-arrow-left" aria-hidden="true"></i>Tous les utilisateurs</a>
+    <div class="pagehead">
+        <div>
+            <h1 th:text="${user.id != null} ? |Modifier ${user.username}| : 'Nouvel utilisateur'">Nouvel utilisateur</h1>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <form class="panel form-panel" th:action="${user.id != null ? '/admin/users/edit/' + user.id : '/admin/users/create'}"
+          th:object="${user}" method="post">
+        <fieldset>
+            <legend>Compte</legend>
+            <div class="fields">
+                <div class="field">
+                    <label for="username">Nom d'utilisateur</label>
+                    <input class="input" type="text" th:field="*{username}" required autocomplete="off">
+                </div>
+                <div class="field">
+                    <label for="email">E-mail</label>
+                    <input class="input" type="email" th:field="*{email}" required>
+                </div>
+                <div class="field">
+                    <label for="firstName">Prénom</label>
+                    <input class="input" type="text" th:field="*{firstName}">
+                </div>
+                <div class="field">
+                    <label for="lastName">Nom</label>
+                    <input class="input" type="text" th:field="*{lastName}">
+                </div>
+                <div class="field field--wide" th:if="${user.id == null}">
+                    <label for="password">Mot de passe</label>
+                    <input class="input" type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+                    <span class="hint">8 caractères minimum. Transmettez-le à la personne de vive voix, pas par e-mail.</span>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Accès</legend>
+            <div class="fields">
+                <div class="field">
+                    <label for="role">Rôle</label>
+                    <select class="select" th:field="*{role}">
+                        <option value="ADMIN">Administrateur</option>
+                        <option value="MANAGER">Gestionnaire</option>
+                        <option value="EMPLOYEE">Agent</option>
+                    </select>
+                    <span class="hint">Seuls les administrateurs voient cette page des utilisateurs.</span>
+                </div>
+                <div class="field" style="justify-content: center;">
+                    <label class="check" for="enabled1">
+                        <input type="checkbox" th:field="*{enabled}">
+                        Compte actif, la personne peut se connecter
+                    </label>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <a class="btn" th:href="@{/admin/users}">Annuler</a>
+            <button type="submit" class="btn btn--primary" th:text="${user.id != null} ? 'Enregistrer les modifications' : 'Créer le compte'">Enregistrer</button>
+        </div>
+    </form>
+</main>
 </body>
 </html>

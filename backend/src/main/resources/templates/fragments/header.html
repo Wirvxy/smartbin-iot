@@ -1,11 +1,12 @@
-<div th:fragment="header">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 th:text="${pageTitle != null ? pageTitle : 'Dashboard'}">Dashboard</h2>
-        <div class="d-flex gap-2">
-            <span class="badge bg-primary" id="notification-badge" style="display: none;">0</span>
-            <button class="btn btn-outline-secondary" id="notification-btn">
-                <i class="bi bi-bell"></i>
-            </button>
-        </div>
-    </div>
+<!-- Page fragments shared by several screens. -->
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Empty-state block: title plus one line telling the user what to do next. -->
+<div th:fragment="empty(title, text)" style="padding: 28px 24px;">
+    <p style="font: 600 22px/1.2 var(--font-display);" th:text="${title}">Rien ici.</p>
+    <p class="empty" th:text="${text}">Explication.</p>
 </div>
+
+</body>
+</html>

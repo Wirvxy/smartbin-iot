@@ -41,10 +41,10 @@ public class AuthController {
                            @RequestParam(required = false) String logout,
                            Model model) {
         if (error != null) {
-            model.addAttribute("error", "Invalid username or password");
+            model.addAttribute("error", "Nom d'utilisateur ou mot de passe incorrect.");
         }
         if (logout != null) {
-            model.addAttribute("message", "You have been logged out successfully");
+            model.addAttribute("message", "Vous êtes déconnecté.");
         }
         return "auth/login";
     }

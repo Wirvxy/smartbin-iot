@@ -1,283 +1,235 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        .sidebar {
-            min-height: 100vh;
-            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-        }
-        .sidebar .nav-link {
-            color: rgba(255,255,255,0.8);
-            padding: 0.75rem 1rem;
-            margin: 0.25rem 0;
-            border-radius: 0.5rem;
-        }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            color: #fff;
-            background-color: rgba(255,255,255,0.1);
-        }
-        .main-content {
-            background-color: #f8f9fa;
-            min-height: 100vh;
-        }
-        .card-stat {
-            border-left: 4px solid;
-        }
-        .card-stat.primary { border-left-color: #0d6efd; }
-        .card-stat.success { border-left-color: #198754; }
-        .card-stat.warning { border-left-color: #ffc107; }
-        .card-stat.danger { border-left-color: #dc3545; }
-        #map { height: 400px; width: 100%; }
-    </style>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{::link})}">
+    <title>Vue d'ensemble – SmartBin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 sidebar p-3">
-                <div class="text-white mb-4">
-                    <h4><i class="bi bi-trash3"></i> Smart Waste</h4>
-                </div>
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" th:href="@{/dashboard}">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/containers}">
-                            <i class="bi bi-box-seam"></i> Conteneurs
-                        </a>
-                    </li>
-                    <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                        <a class="nav-link" th:href="@{/admin/users}">
-                            <i class="bi bi-people"></i> Utilisateurs
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/reports}">
-                            <i class="bi bi-file-earmark-text"></i> Rapports
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/alerts}">
-                            <i class="bi bi-bell"></i> Alertes
-                        </a>
-                    </li>
-                </ul>
-                <div class="mt-auto pt-3">
-                    <div class="text-white-50 small mb-2" sec:authentication="name"></div>
-                    <a class="nav-link text-danger" th:href="@{/logout}">
-                        <i class="bi bi-box-arrow-right"></i> Déconnexion
-                    </a>
-                </div>
-            </nav>
-            
-            <!-- Main Content -->
-            <main class="col-md-9 col-lg-10 ms-sm-auto main-content p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2>Tableau de bord</h2>
-                </div>
-                
-                <!-- Statistics Cards -->
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="card card-stat primary">
-                            <div class="card-body">
-                                <h6 class="text-muted">Total Conteneurs</h6>
-                                <h2 th:text="${stats.totalContainers}">0</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card card-stat success">
-                            <div class="card-body">
-                                <h6 class="text-muted">Conteneurs Actifs</h6>
-                                <h2 th:text="${stats.activeContainers}">0</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card card-stat warning">
-                            <div class="card-body">
-                                <h6 class="text-muted">Taux de Remplissage Moyen</h6>
-                                <h2 th:text="${#numbers.formatDecimal(stats.averageFillPercentage, 1, 1)} + '%'">0%</h2>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card card-stat danger">
-                            <div class="card-body">
-                                <h6 class="text-muted">Alertes Actives</h6>
-                                <h2 th:text="${stats.alertContainers}">0</h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Charts Row -->
-                <div class="row mb-4">
-                    <div class="col-md-6 mb-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>Remplissage par conteneur</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="fillTrendChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>Répartition par Statut</h5>
-                            </div>
-                            <div class="card-body">
-                                <canvas id="statusChart"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Map -->
-                <div class="row">
-                    <div class="col-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h5>Carte Interactive des Conteneurs</h5>
-                            </div>
-                            <div class="card-body">
-                                <div id="map"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <script th:inline="javascript">
-        // Initialize map (Morocco only)
-        // Approximate bounding box for Morocco (incl. Western Sahara)
-        const moroccoBounds = L.latLngBounds(
-            [20.5, -17.6], // South-West
-            [36.2, -0.9]   // North-East
-        );
+<header th:replace="~{layout/base :: topbar('dashboard')}"></header>
 
-        const map = L.map('map', {
-            maxBounds: moroccoBounds,
-            maxBoundsViscosity: 1.0,
-            minZoom: 5,
-            maxZoom: 18
-        });
-        map.fitBounds(moroccoBounds);
-        
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+<main class="page">
+    <section class="overview" aria-labelledby="headline">
+        <h1 class="headline" id="headline">
+            <th:block th:switch="${due.size()}">
+                <th:block th:case="0">Aucun bac à collecter.</th:block>
+                <th:block th:case="1">1 bac est à collecter.</th:block>
+                <th:block th:case="*" th:text="|${due.size()} bacs sont à collecter.|">3 bacs sont à collecter.</th:block>
+            </th:block>
+        </h1>
+        <p class="lede">
+            <span id="summary" th:text="|Sur ${stats.totalContainers} bacs suivis, remplissage moyen ${#numbers.formatDecimal(stats.averageFillPercentage, 1, 0)} %.|">Sur 10 bacs suivis, remplissage moyen 52 %.</span>
+            <span class="live" id="live"><span class="live-dot" aria-hidden="true"></span><span id="live-text" th:text="|Mis à jour à ${#temporals.format(#temporals.createNow(), 'HH:mm:ss')}|">Mis à jour à 00:00:00</span></span>
+        </p>
+
+        <div class="binwall is-priming" id="binwall" th:if="${!containers.isEmpty()}">
+            <th:block th:each="c : ${containers}">
+                <a th:replace="~{layout/base :: bin(${c})}"></a>
+            </th:block>
+        </div>
+        <p class="binwall-note" th:if="${!containers.isEmpty()}">
+            Chaque bac est dessiné à son niveau actuel, du plus plein au plus vide. La ligne pointillée marque son seuil d'alerte.
+        </p>
+        <p class="empty" th:if="${containers.isEmpty()}">
+            Aucun bac n'est encore enregistré. <a th:href="@{/containers/create}">Ajoutez un conteneur</a> pour le voir ici.
+        </p>
+    </section>
+
+    <div class="split">
+        <section class="panel" aria-labelledby="queue-title">
+            <div class="panel__head">
+                <h2 id="queue-title">Tournée à prévoir</h2>
+            </div>
+            <div id="queue" th:data-csrf-param="${_csrf.parameterName}" th:data-csrf-token="${_csrf.token}">
+                <div class="queue-group">
+                    <h3>Au-dessus du seuil</h3>
+                    <ul class="queue" th:if="${!due.isEmpty()}">
+                        <li th:each="c : ${due}" class="is-full">
+                            <span>
+                                <a th:href="@{/containers/{id}(id=${c.id})}" th:text="${c.name}">Nom</a>
+                                <span class="sub" th:text="|${c.containerId}, ${c.region}|">BIN-0001, Fès</span>
+                            </span>
+                            <span class="pct" th:text="|${#numbers.formatDecimal(c.fillPercentage, 1, 0)}%|">90%</span>
+                            <form class="inline" th:action="@{/containers/{id}/collect(id=${c.id})}" method="post">
+                                <input type="hidden" name="back" value="dashboard">
+                                <button type="submit" class="btn btn--primary btn--sm">Marquer collecté</button>
+                            </form>
+                        </li>
+                    </ul>
+                    <p class="empty" th:if="${due.isEmpty()}">Aucun bac n'a dépassé son seuil.</p>
+                </div>
+                <div class="queue-group" th:if="${!soon.isEmpty()}">
+                    <h3>Bientôt pleins (60 % et plus)</h3>
+                    <ul class="queue">
+                        <li th:each="c : ${soon}" class="is-soon">
+                            <span>
+                                <a th:href="@{/containers/{id}(id=${c.id})}" th:text="${c.name}">Nom</a>
+                                <span class="sub" th:text="|${c.containerId}, ${c.region}|">BIN-0002, Rabat</span>
+                            </span>
+                            <span class="pct" th:text="|${#numbers.formatDecimal(c.fillPercentage, 1, 0)}%|">70%</span>
+                            <span></span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel panel--flush" aria-labelledby="map-title">
+            <div class="panel__head">
+                <h2 id="map-title">Carte des bacs</h2>
+                <p>Couleur selon le remplissage</p>
+            </div>
+            <div style="padding: 16px 0 0;">
+                <div id="map" class="map" role="region" aria-label="Carte des conteneurs"></div>
+            </div>
+        </section>
+    </div>
+
+    <section class="panel" style="margin-top: 24px;" aria-labelledby="fleet-title"
+             th:with="total=${stats.totalContainers > 0 ? stats.totalContainers : 1}">
+        <div class="panel__head">
+            <h2 id="fleet-title">État du parc</h2>
+            <p th:text="|${stats.totalContainers} conteneurs|">10 conteneurs</p>
+        </div>
+        <div class="fleet" aria-hidden="true">
+            <span class="f-active" th:style="|width: ${stats.activeContainers * 100.0 / total}%|"></span>
+            <span class="f-full" th:style="|width: ${stats.fullContainers * 100.0 / total}%|"></span>
+            <span class="f-maint" th:style="|width: ${stats.maintenanceContainers * 100.0 / total}%|"></span>
+            <span class="f-off" th:style="|width: ${stats.inactiveContainers * 100.0 / total}%|"></span>
+        </div>
+        <ul class="fleet-legend">
+            <li><span class="swatch" style="background: var(--ok)"></span><b th:text="${stats.activeContainers}">0</b>actifs</li>
+            <li><span class="swatch" style="background: var(--full)"></span><b th:text="${stats.fullContainers}">0</b>pleins</li>
+            <li><span class="swatch" style="background: repeating-linear-gradient(135deg, var(--ink-2) 0 2px, var(--empty) 2px 4px)"></span><b th:text="${stats.maintenanceContainers}">0</b>en maintenance</li>
+            <li><span class="swatch" style="background: var(--line-strong)"></span><b th:text="${stats.inactiveContainers}">0</b>inactifs</li>
+        </ul>
+    </section>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    const SOON = 60;
+    const wall = document.getElementById('binwall');
+    const queueEl = document.getElementById('queue');
+    const csrfParam = queueEl.dataset.csrfParam;
+    const csrfToken = queueEl.dataset.csrfToken;
+
+    const fill = c => c.fillPercentage ?? 0;
+    const limit = c => c.alertThreshold ?? 80;
+    const state = c => fill(c) >= limit(c) ? 'is-full' : (fill(c) >= SOON ? 'is-soon' : 'is-ok');
+    const colour = s => getComputedStyle(document.documentElement)
+        .getPropertyValue(s === 'is-full' ? '--full' : s === 'is-soon' ? '--soon' : '--ok');
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const pct = n => Math.round(n);
+
+    // One load moment: the bins fill up once the page is painted.
+    if (wall) requestAnimationFrame(() => requestAnimationFrame(() => wall.classList.remove('is-priming')));
+
+    // Map (skipped if the Leaflet CDN can't be reached; the rest of the page keeps updating)
+    const hasMap = !!window.L;
+    const map = hasMap && L.map('map', {
+        maxBounds: L.latLngBounds([20.5, -17.6], [36.2, -0.9]),
+        maxBoundsViscosity: 1.0, minZoom: 5, maxZoom: 18, scrollWheelZoom: false
+    }).setView([33.6, -6.5], 6);
+    if (hasMap) {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd'
         }).addTo(map);
-        
-        // Load containers and add markers
-        fetch('/dashboard/data/containers')
-            .then(response => response.json())
-            .then(containers => {
-                containers.forEach(container => {
-                    const color = container.fillPercentage >= container.alertThreshold ? 'red' :
-                                 container.fillPercentage >= 60 ? 'orange' : 'green';
-                    
-                    const marker = L.marker([container.latitude, container.longitude])
-                        .addTo(map)
-                        .bindPopup(`
-                            <b>${container.name}</b><br>
-                            ID: ${container.containerId}<br>
-                            Remplissage: ${container.fillPercentage.toFixed(1)}%<br>
-                            Statut: ${container.status}
-                        `);
-                    
-                    marker.setIcon(L.divIcon({
-                        className: 'custom-marker',
-                        html: `<div style="background-color: ${color}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
-                        iconSize: [20, 20]
-                    }));
-                });
-            });
-        
-        // Fill level of each container (real data, refreshed with the map data)
-        const fillCtx = document.getElementById('fillTrendChart').getContext('2d');
-        const fillChart = new Chart(fillCtx, {
-            type: 'bar',
-            data: { labels: [], datasets: [{ label: 'Remplissage (%)', data: [], backgroundColor: [] }] },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, max: 100 } }
-            }
+    } else {
+        document.getElementById('map').innerHTML = '<p class="empty" style="padding: 24px;">La carte n\'a pas pu se charger. Vérifiez la connexion Internet.</p>';
+    }
+    const markers = new Map();
+
+    function drawMarkers(containers) {
+        const pts = [];
+        if (!hasMap) return pts;
+        containers.forEach(c => {
+            if (c.latitude == null || c.longitude == null) return;
+            const s = state(c);
+            const icon = L.divIcon({ className: '', html: `<div class="map-dot" style="--c:${colour(s)}"></div>`, iconSize: [16, 16] });
+            const popup = `<b>${esc(c.name)}</b><br>${esc(c.containerId)}, ${pct(fill(c))} % rempli<br><a href="/containers/${c.id}">Voir le bac</a>`;
+            let m = markers.get(c.id);
+            if (m) { m.setLatLng([c.latitude, c.longitude]).setIcon(icon).setPopupContent(popup); }
+            else { m = L.marker([c.latitude, c.longitude], { icon, title: c.name }).bindPopup(popup).addTo(map); markers.set(c.id, m); }
+            pts.push([c.latitude, c.longitude]);
         });
-        fetch('/dashboard/data/containers')
-            .then(response => response.json())
-            .then(containers => {
-                fillChart.data.labels = containers.map(c => c.containerId);
-                fillChart.data.datasets[0].data = containers.map(c => Math.round(c.fillPercentage));
-                fillChart.data.datasets[0].backgroundColor = containers.map(c =>
-                    c.fillPercentage >= c.alertThreshold ? 'rgb(220, 53, 69)' :
-                    c.fillPercentage >= 60 ? 'rgb(255, 193, 7)' : 'rgb(25, 135, 84)');
-                fillChart.update();
-            });
-        
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        const activeContainers = /*[[${stats.activeContainers}]]*/ 0;
-        const fullContainers = /*[[${stats.fullContainers}]]*/ 0;
-        const maintenanceContainers = /*[[${stats.maintenanceContainers}]]*/ 0;
-        const inactiveContainers = /*[[${stats.inactiveContainers}]]*/ 0;
-        new Chart(statusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Actif', 'Plein', 'Maintenance', 'Inactif'],
-                datasets: [{
-                    data: [
-                        activeContainers,
-                        fullContainers,
-                        maintenanceContainers,
-                        inactiveContainers
-                    ],
-                    backgroundColor: [
-                        'rgb(75, 192, 192)',
-                        'rgb(255, 99, 132)',
-                        'rgb(255, 205, 86)',
-                        'rgb(201, 203, 207)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true
-            }
+        return pts;
+    }
+
+    function headline(n) {
+        if (n === 0) return 'Aucun bac à collecter.';
+        if (n === 1) return '1 bac est à collecter.';
+        return `${n} bacs sont à collecter.`;
+    }
+
+    function queueItem(c, withAction) {
+        const action = withAction
+            ? `<form class="inline" action="/containers/${c.id}/collect" method="post">
+                 <input type="hidden" name="${esc(csrfParam)}" value="${esc(csrfToken)}">
+                 <input type="hidden" name="back" value="dashboard">
+                 <button type="submit" class="btn btn--primary btn--sm">Marquer collecté</button></form>`
+            : '<span></span>';
+        return `<li class="${state(c)}"><span><a href="/containers/${c.id}">${esc(c.name)}</a>
+                <span class="sub">${esc(c.containerId)}, ${esc(c.region)}</span></span>
+                <span class="pct">${pct(fill(c))}%</span>${action}</li>`;
+    }
+
+    function render(containers) {
+        const due = containers.filter(c => fill(c) >= limit(c)).sort((a, b) => fill(b) - fill(a));
+        const soon = containers.filter(c => fill(c) >= SOON && fill(c) < limit(c)).sort((a, b) => fill(b) - fill(a));
+        const avg = containers.length ? containers.reduce((s, c) => s + fill(c), 0) / containers.length : 0;
+
+        document.getElementById('headline').textContent = headline(due.length);
+        document.getElementById('summary').textContent =
+            `Sur ${containers.length} bacs suivis, remplissage moyen ${pct(avg)} %.`;
+
+        containers.forEach(c => {
+            const el = wall && wall.querySelector(`.bin[data-id="${c.id}"]`);
+            if (!el) return;
+            el.classList.remove('is-ok', 'is-soon', 'is-full');
+            el.classList.add(state(c));
+            el.style.setProperty('--fill', Math.min(fill(c), 100) + '%');
+            el.style.setProperty('--limit', limit(c) + '%');
+            el.querySelector('.bin__pct > span').textContent = pct(fill(c));
+            el.setAttribute('aria-label', `${c.containerId}, ${c.name}, rempli à ${pct(fill(c))} %, seuil ${pct(limit(c))} %`);
         });
-        
-        // Real-time updates
-        setInterval(() => {
-            fetch('/dashboard/data/stats')
-                .then(response => response.json())
-                .then(stats => {
-                    document.querySelector('.card-stat.primary h2').textContent = stats.totalContainers;
-                    document.querySelector('.card-stat.success h2').textContent = stats.activeContainers;
-                    document.querySelector('.card-stat.warning h2').textContent = stats.averageFillPercentage.toFixed(1) + '%';
-                    document.querySelector('.card-stat.danger h2').textContent = stats.alertContainers;
-                });
-        }, 30000); // Update every 30 seconds
-    </script>
+
+        document.getElementById('queue').innerHTML =
+            `<div class="queue-group"><h3>Au-dessus du seuil</h3>` +
+            (due.length ? `<ul class="queue">${due.map(c => queueItem(c, true)).join('')}</ul>`
+                        : `<p class="empty">Aucun bac n'a dépassé son seuil.</p>`) + `</div>` +
+            (soon.length ? `<div class="queue-group"><h3>Bientôt pleins (60 % et plus)</h3>
+                <ul class="queue">${soon.map(c => queueItem(c, false)).join('')}</ul></div>` : '');
+
+        drawMarkers(containers);
+    }
+
+    const live = document.getElementById('live');
+    async function refresh(first) {
+        try {
+            const res = await fetch('/dashboard/data/containers', { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error(res.status);
+            const containers = await res.json();
+            if (wall && containers.length !== wall.querySelectorAll('.bin').length) { location.reload(); return; }
+            if (first) {
+                const pts = drawMarkers(containers);
+                if (!hasMap) { /* nothing to fit */ }
+                else if (pts.length > 1) map.fitBounds(pts, { padding: [40, 40] });
+                else if (pts.length === 1) map.setView(pts[0], 14);
+            } else {
+                render(containers);
+            }
+            live.classList.remove('is-stale');
+            document.getElementById('live-text').textContent =
+                'Mis à jour à ' + new Date().toLocaleTimeString('fr-FR');
+        } catch (e) {
+            live.classList.add('is-stale');
+            document.getElementById('live-text').textContent = 'Connexion perdue, nouvel essai dans 10 s';
+        }
+    }
+    refresh(true);
+    setInterval(() => refresh(false), 10000);
+})();
+</script>
 </body>
 </html>

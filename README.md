@@ -22,24 +22,37 @@ Connected bins that measure their own fill level and position, send it over **Lo
 |---|---|
 | 📡 **Sensor node** | Ultrasonic fill-level measurement + GPS position, sent every few seconds over LoRa 433 MHz |
 | 🛰️ **Gateway** | Heltec WiFi LoRa 32 V3 receives LoRa packets, adds RSSI/SNR, publishes to AWS IoT over MQTT/TLS with an X.509 device certificate |
-| 🖥️ **Web dashboard** | Live fill levels, map, per-container history, automatic alerts above the threshold, collection tracking, PDF/CSV reports, user management |
+| 🖥️ **Web dashboard** | Live bin gauges sorted by urgency, collection list, map, per-container history, automatic alerts above the threshold, PDF/CSV reports, user management with login audit |
 | 📱 **Mobile app** | Region picker, list sorted by a recommendation score (fill level × distance), map, statistics. Runs on Android, iOS and web |
 | 🧪 **Demo mode** | A built-in simulator replays the exact sensor + gateway payload, so the whole system runs on a laptop without hardware or AWS |
 
 ## 📸 Screenshots
 
 ### Web dashboard
-| Dashboard | Containers |
-|---|---|
-| ![Dashboard](docs/screenshots/dashboard.png) | ![Containers](docs/screenshots/containers.png) |
 
-| Live container (fed by the sensor node) | Automatic alerts |
+The overview answers one question: **which bins need emptying now?** Every bin is drawn as a gauge at its live fill level, sorted fullest first, with its alert threshold as a dashed line. The page refreshes every 10 s, and a full bin can be marked as collected straight from the list.
+
+![Overview](docs/screenshots/dashboard.png)
+
+| Sign-in | Containers |
+|---|---|
+| ![Sign-in](docs/screenshots/login.png) | ![Containers](docs/screenshots/containers.png) |
+
+| Container detail (fed by the sensor node) | Automatic alerts |
 |---|---|
 | ![Container](docs/screenshots/container-live.png) | ![Alerts](docs/screenshots/alerts.png) |
 
 **Login audit:** every dashboard login attempt is logged, so brute-force attempts show up in red.
 
 ![Login history](docs/screenshots/login-history.png)
+
+<details>
+<summary><b>Design notes</b></summary>
+
+- Colour only ever means fill state: green under 60 %, amber from 60 % to the threshold, red above it. Everything else is ink on a concrete grey.
+- Type is Barlow and Barlow Condensed, a family drawn from road and street signage, self-hosted so the dashboard works offline.
+- Server-rendered with Thymeleaf (no build step), one stylesheet, and it works on a phone. If the map library can't load, the rest of the page keeps updating.
+</details>
 
 ### Mobile app
 | Login | Regions | Recommended bins | Statistics | Details |
@@ -79,6 +92,8 @@ Before publishing, the project went through a security review. Issues found and 
 | Admin password reset to a hard-coded value on every restart | Default accounts created only once |
 | No record of failed logins | Every attempt (success/failure, IP, user agent) stored and visible to admins |
 | IoT data entry had no authentication | Shared API key, compared in constant time, plus payload validation |
+| Logout worked with a plain `GET /logout`, so any page could sign a user out | Logout is a `POST` carrying the CSRF token |
+| New user accounts defaulted to the Administrator role | New accounts default to the least-privileged role |
 
 <details>
 <summary><b>Functional bugs fixed during the same review</b></summary>
@@ -91,6 +106,7 @@ Before publishing, the project went through a security review. Issues found and 
 - Dashboard charts showed hard-coded numbers, and its map/stats called a JWT-only API from a browser session, so markers never loaded
 - User "History" page template was missing
 - Mobile app pointed to a non-existent API (wrong port and paths), with no regions or statistics endpoints on the backend
+- Creating a container with an ID already in use crashed with a 500; the form now shows the error and keeps what was typed
 </details>
 
 ## 🚀 Run it

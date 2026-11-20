@@ -47,8 +47,8 @@ public class AlertService {
                     alert.setType(Alert.AlertType.FILL_THRESHOLD);
                     alert.setStatus(Alert.AlertStatus.ACTIVE);
                     alert.setFillPercentage(container.getFillPercentage());
-                    alert.setMessage(String.format("Container %s has reached %.1f%% capacity", 
-                        container.getName(), container.getFillPercentage()));
+                    alert.setMessage(String.format(java.util.Locale.FRANCE, "Rempli à %.0f %%, seuil fixé à %.0f %%",
+                        container.getFillPercentage(), container.getAlertThreshold()));
                     alertRepository.save(alert);
                 }
             }

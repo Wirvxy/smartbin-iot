@@ -1,45 +1,35 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapports - Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{})}">
+    <title>Rapports – SmartBin</title>
 </head>
 <body>
-    <div class="container mt-5">
-        <h2 class="mb-4">Rapports et Statistiques</h2>
-        
-        <div class="row">
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="bi bi-file-pdf" style="font-size: 3rem; color: #dc3545;"></i>
-                        <h5 class="mt-3">Rapport PDF</h5>
-                        <p class="text-muted">Générer un rapport PDF complet</p>
-                        <a th:href="@{/reports/pdf}" class="btn btn-danger">
-                            <i class="bi bi-download"></i> Télécharger PDF
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <i class="bi bi-file-earmark-spreadsheet" style="font-size: 3rem; color: #198754;"></i>
-                        <h5 class="mt-3">Export CSV</h5>
-                        <p class="text-muted">Exporter les données en CSV</p>
-                        <a th:href="@{/reports/csv}" class="btn btn-success">
-                            <i class="bi bi-download"></i> Télécharger CSV
-                        </a>
-                    </div>
-                </div>
-            </div>
+<header th:replace="~{layout/base :: topbar('reports')}"></header>
+
+<main class="page page--narrow">
+    <div class="pagehead">
+        <div>
+            <h1>Rapports</h1>
+            <p>Les fichiers sont générés à partir des données du moment où vous cliquez.</p>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <ul class="panel panel--flush downloads">
+        <li>
+            <div>
+                <h2>Synthèse du parc (PDF)</h2>
+                <p>Nombre de conteneurs, conteneurs actifs et remplissage moyen, avec la date et l'heure de génération. Prêt à imprimer ou à joindre à un e-mail.</p>
+            </div>
+            <a class="btn btn--primary" th:href="@{/reports/pdf}"><i class="bi bi-download" aria-hidden="true"></i>Télécharger le PDF</a>
+        </li>
+        <li>
+            <div>
+                <h2>Liste des conteneurs (CSV)</h2>
+                <p>Une ligne par bac : identifiant, nom, région, capacité, contenu, remplissage et statut. S'ouvre dans Excel ou Google Sheets.</p>
+            </div>
+            <a class="btn" th:href="@{/reports/csv}"><i class="bi bi-download" aria-hidden="true"></i>Télécharger le CSV</a>
+        </li>
+    </ul>
+</main>
 </body>
 </html>

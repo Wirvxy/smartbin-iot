@@ -1,185 +1,141 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${container.name} + ' - Smart Waste'">Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        #map { height: 300px; width: 100%; }
-    </style>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{::link})}">
+    <title th:text="|${container.name} – SmartBin|">Conteneur – SmartBin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 th:text="${container.name}">Conteneur</h2>
-            <div>
-                <a th:href="@{/containers/edit/{id}(id=${container.id})}" class="btn btn-warning">
-                    <i class="bi bi-pencil"></i> Modifier
-                </a>
-                <form th:action="@{/containers/{id}/collect(id=${container.id})}" method="post" style="display: inline;">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-arrow-clockwise"></i> Collecter
-                    </button>
-                </form>
-            </div>
+<header th:replace="~{layout/base :: topbar('containers')}"></header>
+
+<main class="page">
+    <a class="crumb" th:href="@{/containers}"><i class="bi bi-arrow-left" aria-hidden="true"></i>Tous les conteneurs</a>
+    <div class="pagehead">
+        <div>
+            <h1 th:text="${container.name}">Conteneur</h1>
+            <p>
+                <span th:text="${container.containerId}">BIN-0001</span>,
+                <span th:text="${container.region}">Fès</span><th:block th:if="${container.address != null and !container.address.isEmpty()}">,
+                <span th:text="${container.address}">adresse</span></th:block>
+            </p>
         </div>
-        
-        <div class="row mb-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Informations</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <tr>
-                                <th>ID Conteneur:</th>
-                                <td th:text="${container.containerId}"></td>
-                            </tr>
-                            <tr>
-                                <th>Nom:</th>
-                                <td th:text="${container.name}"></td>
-                            </tr>
-                            <tr>
-                                <th>Description:</th>
-                                <td th:text="${container.description}"></td>
-                            </tr>
-                            <tr>
-                                <th>Région:</th>
-                                <td th:text="${container.region}"></td>
-                            </tr>
-                            <tr>
-                                <th>Adresse:</th>
-                                <td th:text="${container.address}"></td>
-                            </tr>
-                            <tr>
-                                <th>Statut:</th>
-                                <td>
-                                    <span class="badge" 
-                                          th:classappend="${container.status != null and container.status.name() == 'ACTIVE' ? 'bg-success' : (container.status != null and container.status.name() == 'FULL' ? 'bg-danger' : 'bg-secondary')}"
-                                          th:text="${container.status}">
-                                    </span>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Niveau de Remplissage</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label>Remplissage actuel:</label>
-                            <div class="progress" style="height: 30px;">
-                                <div class="progress-bar" 
-                                     th:classappend="${container.fillPercentage >= container.alertThreshold ? 'bg-danger' : (container.fillPercentage >= 60 ? 'bg-warning' : 'bg-success')}"
-                                     th:style="'width: ' + ${container.fillPercentage} + '%'"
-                                     th:text="${#numbers.formatDecimal(container.fillPercentage, 1, 1)} + '%'">
-                                </div>
-                            </div>
-                        </div>
-                        <table class="table">
-                            <tr>
-                                <th>Capacité:</th>
-                                <td th:text="${#numbers.formatDecimal(container.capacity, 1, 1)} + ' L'"></td>
-                            </tr>
-                            <tr>
-                                <th>Niveau actuel:</th>
-                                <td th:text="${#numbers.formatDecimal(container.currentLevel, 1, 1)} + ' L'"></td>
-                            </tr>
-                            <tr>
-                                <th>Seuil d'alerte:</th>
-                                <td th:text="${#numbers.formatDecimal(container.alertThreshold, 1, 1)} + '%'"></td>
-                            </tr>
-                            <tr th:if="${container.lastCollection != null}">
-                                <th>Dernière collecte:</th>
-                                <td th:text="${#temporals.format(container.lastCollection, 'dd/MM/yyyy HH:mm')}"></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Localisation</h5>
-                    </div>
-                    <div class="card-body">
-                        <div id="map"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Historique</h5>
-                    </div>
-                    <div class="card-body">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                    <th>Niveau</th>
-                                    <th>Remplissage</th>
-                                    <th>Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="entry : ${history}">
-                                    <td th:text="${#temporals.format(entry.timestamp, 'dd/MM/yyyy HH:mm')}"></td>
-                                    <td>
-                                        <span class="badge bg-info" th:text="${entry.action}"></span>
-                                    </td>
-                                    <td th:text="${#numbers.formatDecimal(entry.fillLevel, 1, 1)} + ' L'"></td>
-                                    <td th:text="${#numbers.formatDecimal(entry.fillPercentage, 1, 1)} + '%'"></td>
-                                    <td th:text="${entry.description}"></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+        <div class="actions">
+            <a class="btn" th:href="@{/containers/edit/{id}(id=${container.id})}">Modifier</a>
+            <form class="inline" th:action="@{/containers/{id}/collect(id=${container.id})}" method="post">
+                <button type="submit" class="btn btn--primary">Marquer collecté</button>
+            </form>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script th:inline="javascript">
-        const latitude = /*[[${container.latitude}]]*/ 36.8065;
-        const longitude = /*[[${container.longitude}]]*/ 10.1815;
-        const containerName = /*[[${container.name}]]*/ 'Container';
-        const containerAddress = /*[[${container.address}]]*/ '';
-        
-        // Morocco-only bounds (approx., incl. Western Sahara)
-        const moroccoBounds = L.latLngBounds([20.5, -17.6], [36.2, -0.9]);
 
-        const map = L.map('map', {
-            maxBounds: moroccoBounds,
-            maxBoundsViscosity: 1.0,
-            minZoom: 5,
-            maxZoom: 18
-        }).setView([latitude, longitude], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-        
-        L.marker([latitude, longitude])
-            .addTo(map)
-            .bindPopup('<b>' + containerName + '</b><br>' + containerAddress);
-    </script>
+    <section class="panel" aria-label="Remplissage">
+        <div class="detail">
+            <div class="binwall binwall--lg is-priming" id="binwall">
+                <a th:replace="~{layout/base :: bin(${container})}"></a>
+            </div>
+            <div>
+                <p style="margin-bottom: 18px;"><th:block th:replace="~{layout/base :: status(${container.status})}"></th:block></p>
+                <dl class="facts">
+                    <div>
+                        <dt>Remplissage</dt>
+                        <dd th:text="|${#numbers.formatDecimal(container.fillPercentage ?: 0, 1, 1)} %|">0 %</dd>
+                    </div>
+                    <div>
+                        <dt>Seuil d'alerte</dt>
+                        <dd th:text="|${#numbers.formatDecimal(container.alertThreshold ?: 80, 1, 0)} %|">80 %</dd>
+                    </div>
+                    <div>
+                        <dt>Contenu actuel</dt>
+                        <dd th:text="|${#numbers.formatDecimal(container.currentLevel ?: 0, 1, 1)} L sur ${#numbers.formatDecimal(container.capacity ?: 0, 1, 0)} L|">0 L</dd>
+                    </div>
+                    <div>
+                        <dt>Dernière mesure</dt>
+                        <dd class="text" th:text="${container.lastUpdate != null} ? ${#temporals.format(container.lastUpdate, 'dd/MM/yyyy à HH:mm')} : 'Aucune mesure reçue'">—</dd>
+                    </div>
+                    <div>
+                        <dt>Dernière collecte</dt>
+                        <dd class="text" th:text="${container.lastCollection != null} ? ${#temporals.format(container.lastCollection, 'dd/MM/yyyy à HH:mm')} : 'Jamais collecté'">—</dd>
+                    </div>
+                    <div class="wide" th:if="${container.description != null and !container.description.isEmpty()}">
+                        <dt>Description</dt>
+                        <dd class="text" th:text="${container.description}">—</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+    </section>
+
+    <div class="split split--detail">
+        <section class="panel panel--flush" aria-labelledby="hist-title">
+            <div class="panel__head">
+                <h2 id="hist-title">Historique</h2>
+                <p th:text="|${history.size()} événements|">0 événements</p>
+            </div>
+            <div class="table-wrap" style="margin-top: 8px;" th:if="${!history.isEmpty()}">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Date</th>
+                        <th scope="col">Événement</th>
+                        <th scope="col" class="right">Remplissage</th>
+                        <th scope="col">Détail</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="e : ${history}">
+                        <td class="num" th:text="${#temporals.format(e.timestamp, 'dd/MM HH:mm')}">01/01 10:00</td>
+                        <td th:switch="${e.action}">
+                            <span th:case="'COLLECTION'" class="pill pill--ok">Collecte</span>
+                            <span th:case="'ALERT'" class="pill pill--full">Alerte</span>
+                            <span th:case="'UPDATE'" class="pill">Mise à jour</span>
+                            <span th:case="'CREATE'" class="pill">Ajout</span>
+                            <span th:case="*" class="pill" th:text="${e.action}">Autre</span>
+                        </td>
+                        <td class="right num" th:text="|${#numbers.formatDecimal(e.fillPercentage ?: 0, 1, 0)} %|">0 %</td>
+                        <td th:text="${e.description}">—</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="empty" style="padding: 16px 24px 24px;" th:if="${history.isEmpty()}">
+                Aucun événement pour l'instant. Les collectes et les modifications de ce bac apparaîtront ici.
+            </p>
+        </section>
+
+        <section class="panel" aria-labelledby="loc-title">
+            <div class="panel__head">
+                <h2 id="loc-title">Position</h2>
+                <p class="num" th:text="|${#numbers.formatDecimal(container.latitude ?: 0, 1, 5)}, ${#numbers.formatDecimal(container.longitude ?: 0, 1, 5)}|">0, 0</p>
+            </div>
+            <div id="map" class="map map--inset" role="region" aria-label="Position du conteneur"
+                 th:data-lat="${container.latitude}" th:data-lon="${container.longitude}"
+                 th:data-name="${container.name}"></div>
+        </section>
+    </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+    const wall = document.getElementById('binwall');
+    requestAnimationFrame(() => requestAnimationFrame(() => wall.classList.remove('is-priming')));
+
+    const el = document.getElementById('map');
+    const lat = parseFloat(el.dataset.lat), lon = parseFloat(el.dataset.lon);
+    if (isNaN(lat) || isNaN(lon)) { el.outerHTML = '<p class="empty">Pas de position GPS pour ce bac.</p>'; return; }
+    if (!window.L) { el.outerHTML = '<p class="empty">La carte n\'a pas pu se charger. Vérifiez la connexion Internet.</p>'; return; }
+    const map = L.map(el, {
+        maxBounds: L.latLngBounds([20.5, -17.6], [36.2, -0.9]), maxBoundsViscosity: 1.0,
+        minZoom: 5, maxZoom: 18, scrollWheelZoom: false
+    }).setView([lat, lon], 15);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd'
+    }).addTo(map);
+    const c = getComputedStyle(document.documentElement).getPropertyValue(
+        wall.querySelector('.is-full') ? '--full' : wall.querySelector('.is-soon') ? '--soon' : '--ok');
+    L.marker([lat, lon], {
+        title: el.dataset.name,
+        icon: L.divIcon({ className: '', html: `<div class="map-dot" style="--c:${c}"></div>`, iconSize: [16, 16] })
+    }).addTo(map);
+})();
+</script>
 </body>
 </html>

@@ -29,7 +29,11 @@ public class UserController {
     
     @GetMapping("/create")
     public String createUserForm(Model model) {
-        model.addAttribute("user", new UserDTO());
+        // Safe defaults for a new account: least-privileged role, enabled.
+        UserDTO user = new UserDTO();
+        user.setRole(com.smartwaste.model.User.Role.EMPLOYEE);
+        user.setEnabled(true);
+        model.addAttribute("user", user);
         return "admin/users/form";
     }
     

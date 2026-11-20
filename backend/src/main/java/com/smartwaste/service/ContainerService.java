@@ -90,7 +90,7 @@ public class ContainerService {
         Container savedContainer = containerRepository.save(container);
         
         // Record history
-        recordHistory(savedContainer, "CREATE", "Container created");
+        recordHistory(savedContainer, "CREATE", "Conteneur ajouté");
         
         return convertToDTO(savedContainer);
     }
@@ -114,7 +114,7 @@ public class ContainerService {
         Container updatedContainer = containerRepository.save(container);
         
         // Record history
-        recordHistory(updatedContainer, "UPDATE", "Container updated");
+        recordHistory(updatedContainer, "UPDATE", "Fiche modifiée");
         
         return convertToDTO(updatedContainer);
     }
@@ -134,7 +134,7 @@ public class ContainerService {
         containerRepository.save(container);
         
         // Record history
-        recordHistory(container, "UPDATE", String.format("Level updated to %.2f%%", container.getFillPercentage()));
+        recordHistory(container, "UPDATE", String.format(java.util.Locale.FRANCE, "Mesure reçue : %.0f %%", container.getFillPercentage()));
     }
     
     @Transactional
@@ -158,7 +158,7 @@ public class ContainerService {
                 });
 
         // Record history
-        recordHistory(container, "COLLECTION", "Container collected");
+        recordHistory(container, "COLLECTION", "Collecte enregistrée");
     }
     
     @Transactional

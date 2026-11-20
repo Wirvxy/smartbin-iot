@@ -63,8 +63,18 @@ public class ContainerController {
     }
     
     @PostMapping("/create")
-    public String createContainer(@ModelAttribute ContainerDTO containerDTO) {
-        containerService.createContainer(containerDTO);
+    public String createContainer(@ModelAttribute("container") ContainerDTO containerDTO, Model model) {
+        try {
+            containerService.createContainer(containerDTO);
+        } catch (RuntimeException e) {
+            if (!"Container ID already exists".equals(e.getMessage())) {
+                throw e;
+            }
+            // Show the form again with what was typed, instead of a 500 page.
+            model.addAttribute("error", "L'identifiant " + containerDTO.getContainerId()
+                    + " est déjà utilisé par un autre bac.");
+            return "containers/form";
+        }
         return "redirect:/containers";
     }
     
@@ -96,8 +106,10 @@ public class ContainerController {
     }
     
     @PostMapping("/{id}/collect")
-    public String collectContainer(@PathVariable Long id) {
+    public String collectContainer(@PathVariable Long id,
+                                   @RequestParam(required = false) String back) {
         containerService.collectContainer(id);
-        return "redirect:/containers/" + id;
+        // Only a fixed value is accepted, so this can't be turned into an open redirect.
+        return "dashboard".equals(back) ? "redirect:/dashboard" : "redirect:/containers/" + id;
     }
 }

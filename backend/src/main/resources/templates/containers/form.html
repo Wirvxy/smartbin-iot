@@ -1,88 +1,102 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${container.id != null ? 'Modifier' : 'Créer'} + ' Conteneur - Smart Waste'">Smart Waste</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{layout/base :: head(~{::title}, ~{})}">
+    <title th:text="${container.id != null} ? |Modifier ${container.name} – SmartBin| : 'Nouveau conteneur – SmartBin'">Conteneur – SmartBin</title>
 </head>
 <body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h4 th:text="${container.id != null ? 'Modifier le conteneur' : 'Créer un nouveau conteneur'}"></h4>
-                    </div>
-                    <div class="card-body">
-                        <form th:action="${container.id != null ? '/containers/edit/' + container.id : '/containers/create'}" 
-                              th:object="${container}" method="post">
-                            <div class="mb-3">
-                                <label class="form-label">ID Conteneur</label>
-                                <input type="text" class="form-control" th:field="*{containerId}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Nom</label>
-                                <input type="text" class="form-control" th:field="*{name}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Description</label>
-                                <textarea class="form-control" th:field="*{description}" rows="3"></textarea>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Latitude</label>
-                                    <input type="number" step="any" class="form-control" th:field="*{latitude}" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Longitude</label>
-                                    <input type="number" step="any" class="form-control" th:field="*{longitude}" required>
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Adresse</label>
-                                <input type="text" class="form-control" th:field="*{address}">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Région</label>
-                                <input type="text" class="form-control" th:field="*{region}" required>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Capacité (litres)</label>
-                                    <input type="number" step="any" class="form-control" th:field="*{capacity}" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Niveau actuel (litres)</label>
-                                    <input type="number" step="any" class="form-control" th:field="*{currentLevel}">
-                                </div>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Seuil d'alerte (%)</label>
-                                <input type="number" step="any" class="form-control" th:field="*{alertThreshold}" 
-                                       min="0" max="100" value="80">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Statut</label>
-                                <select class="form-select" th:field="*{status}">
-                                    <option value="ACTIVE">Actif</option>
-                                    <option value="INACTIVE">Inactif</option>
-                                    <option value="MAINTENANCE">Maintenance</option>
-                                    <option value="FULL">Plein</option>
-                                </select>
-                            </div>
-                            <div class="d-flex justify-content-between">
-                                <a th:href="@{/containers}" class="btn btn-secondary">Annuler</a>
-                                <button type="submit" class="btn btn-primary">Enregistrer</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
+<header th:replace="~{layout/base :: topbar('containers')}"></header>
+
+<main class="page page--narrow">
+    <a class="crumb" th:href="${container.id != null} ? @{/containers/{id}(id=${container.id})} : @{/containers}">
+        <i class="bi bi-arrow-left" aria-hidden="true"></i>
+        <span th:text="${container.id != null} ? ${container.name} : 'Tous les conteneurs'">Retour</span>
+    </a>
+    <div class="pagehead">
+        <div>
+            <h1 th:text="${container.id != null} ? 'Modifier le conteneur' : 'Nouveau conteneur'">Nouveau conteneur</h1>
+            <p th:if="${container.id == null}">Le niveau sera ensuite mis à jour automatiquement par le capteur du bac.</p>
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <form class="panel form-panel" th:action="${container.id != null ? '/containers/edit/' + container.id : '/containers/create'}"
+          th:object="${container}" method="post">
+        <div class="notice notice--error" role="alert" th:if="${error}">
+            <i class="bi bi-exclamation-circle" aria-hidden="true"></i><span th:text="${error}">Erreur</span>
+        </div>
+        <fieldset>
+            <legend>Identification</legend>
+            <div class="fields">
+                <div class="field">
+                    <label for="containerId">Identifiant du bac</label>
+                    <input class="input" type="text" th:field="*{containerId}" required placeholder="BIN-0011">
+                    <span class="hint">Le même identifiant que celui programmé dans le capteur.</span>
+                </div>
+                <div class="field">
+                    <label for="name">Nom</label>
+                    <input class="input" type="text" th:field="*{name}" required placeholder="Place Batha">
+                </div>
+                <div class="field field--wide">
+                    <label for="description">Description <span class="hint">(facultatif)</span></label>
+                    <textarea class="input" th:field="*{description}" rows="3"></textarea>
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Emplacement</legend>
+            <div class="fields">
+                <div class="field">
+                    <label for="region">Région</label>
+                    <input class="input" type="text" th:field="*{region}" required placeholder="Fès">
+                </div>
+                <div class="field">
+                    <label for="address">Adresse <span class="hint">(facultatif)</span></label>
+                    <input class="input" type="text" th:field="*{address}">
+                </div>
+                <div class="field">
+                    <label for="latitude">Latitude</label>
+                    <input class="input" type="number" step="any" th:field="*{latitude}" required placeholder="34.0331">
+                </div>
+                <div class="field">
+                    <label for="longitude">Longitude</label>
+                    <input class="input" type="number" step="any" th:field="*{longitude}" required placeholder="-5.0003">
+                </div>
+            </div>
+        </fieldset>
+
+        <fieldset>
+            <legend>Capacité et alerte</legend>
+            <div class="fields">
+                <div class="field">
+                    <label for="capacity">Capacité (litres)</label>
+                    <input class="input" type="number" step="any" min="1" th:field="*{capacity}" required placeholder="240">
+                </div>
+                <div class="field">
+                    <label for="currentLevel">Contenu actuel (litres)</label>
+                    <input class="input" type="number" step="any" min="0" th:field="*{currentLevel}" placeholder="0">
+                </div>
+                <div class="field">
+                    <label for="alertThreshold">Seuil d'alerte (%)</label>
+                    <input class="input" type="number" step="any" min="0" max="100" th:field="*{alertThreshold}" placeholder="80">
+                    <span class="hint">Une alerte s'ouvre quand le bac dépasse ce remplissage.</span>
+                </div>
+                <div class="field">
+                    <label for="status">Statut</label>
+                    <select class="select" th:field="*{status}">
+                        <option value="ACTIVE">Actif</option>
+                        <option value="FULL">Plein</option>
+                        <option value="MAINTENANCE">En maintenance</option>
+                        <option value="INACTIVE">Inactif</option>
+                    </select>
+                </div>
+            </div>
+        </fieldset>
+
+        <div class="form-actions">
+            <a class="btn" th:href="${container.id != null} ? @{/containers/{id}(id=${container.id})} : @{/containers}">Annuler</a>
+            <button type="submit" class="btn btn--primary" th:text="${container.id != null} ? 'Enregistrer les modifications' : 'Ajouter le conteneur'">Enregistrer</button>
+        </div>
+    </form>
+</main>
 </body>
 </html>
