@@ -1,6 +1,6 @@
 // Snapshot of the demo backend's data, used by demo.js.
 window.SMARTBIN_DEMO = {
- "generatedAt": "2026-11-20T01:31:08",
+ "generatedAt": "2026-11-20T01:42:50",
  "containers": [
   {
    "id": 1,
@@ -12,12 +12,12 @@ window.SMARTBIN_DEMO = {
    "address": "Route d'Imouzzer, EST Fès",
    "region": "Saïss",
    "capacity": 120.0,
-   "currentLevel": 52.8,
-   "fillPercentage": 44.0,
+   "currentLevel": 57.599999999999994,
+   "fillPercentage": 47.99999999999999,
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:31:08.283343",
+   "lastUpdate": "2026-11-20T01:42:48.19635",
    "alertTriggered": false
   },
   {
@@ -35,7 +35,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.713003",
+   "lastUpdate": "2026-11-20T01:42:23.645677",
    "alertTriggered": true
   },
   {
@@ -53,7 +53,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.716058",
+   "lastUpdate": "2026-11-20T01:42:23.64721",
    "alertTriggered": false
   },
   {
@@ -71,7 +71,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.718262",
+   "lastUpdate": "2026-11-20T01:42:23.648584",
    "alertTriggered": true
   },
   {
@@ -89,7 +89,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.721019",
+   "lastUpdate": "2026-11-20T01:42:23.649807",
    "alertTriggered": false
   },
   {
@@ -107,7 +107,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.722985",
+   "lastUpdate": "2026-11-20T01:42:23.651078",
    "alertTriggered": false
   },
   {
@@ -125,7 +125,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.724206",
+   "lastUpdate": "2026-11-20T01:42:23.652291",
    "alertTriggered": false
   },
   {
@@ -143,7 +143,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "MAINTENANCE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.727584",
+   "lastUpdate": "2026-11-20T01:42:23.6534",
    "alertTriggered": false
   },
   {
@@ -161,7 +161,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.73005",
+   "lastUpdate": "2026-11-20T01:42:23.657434",
    "alertTriggered": true
   },
   {
@@ -179,7 +179,7 @@ window.SMARTBIN_DEMO = {
    "alertThreshold": 80.0,
    "status": "ACTIVE",
    "lastCollection": null,
-   "lastUpdate": "2026-11-20T01:30:53.731974",
+   "lastUpdate": "2026-11-20T01:42:23.658625",
    "alertTriggered": false
   }
  ],

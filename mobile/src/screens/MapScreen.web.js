@@ -10,7 +10,7 @@ import { C, F, STATE, fillState } from '../theme';
 
 /**
  * Web version of the map (react-native-maps doesn't run in a browser): Leaflet, centred on Fès.
- * Light CARTO tiles, falling back to standard OpenStreetMap tiles if CARTO can't be reached.
+ * OpenStreetMap tiles (no API key), shown in greyscale so the only colours are the bins' fill states.
  */
 export default function MapScreen({ route, navigation }) {
   const { containers, isLoading, failed, selectedRegion } = useMapContainers();
@@ -111,21 +111,18 @@ export default function MapScreen({ route, navigation }) {
 }
 
 function addTiles(m) {
-  const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19,
-  });
-  let errors = 0, loaded = 0, switched = false;
-  carto.on('tileload', () => { loaded++; });
-  carto.on('tileerror', () => {
-    errors++;
-    if (switched || loaded > 0 || errors < 3) return;
-    switched = true;
-    m.removeLayer(carto);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19,
-    }).addTo(m);
-  });
-  carto.addTo(m);
+  // OpenStreetMap tiles need no API key. The greyscale filter (below) keeps colour for fill states only.
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19,
+    className: 'smartbin-tiles',
+  }).addTo(m);
+  if (typeof document !== 'undefined' && !document.getElementById('smartbin-tiles-style')) {
+    const style = document.createElement('style');
+    style.id = 'smartbin-tiles-style';
+    style.textContent = '.smartbin-tiles { filter: grayscale(1) contrast(.92) brightness(1.05); }';
+    document.head.appendChild(style);
+  }
 }
 
 function esc(s) {

@@ -1,29 +1,18 @@
 /*
  * Shared Leaflet setup for the dashboard maps.
  * - Starts on Fès and never leaves Morocco.
- * - Uses the light CARTO basemap, and switches to the standard OpenStreetMap tiles
- *   if CARTO can't be reached (blocked network, outage), so the map never stays blank.
+ * - OpenStreetMap tiles (no API key needed), shown in greyscale by smartbin.css so that
+ *   the only colours on the map are the bins' fill states.
  */
 (function () {
     const FES = [34.0331, -5.0003];
     const MOROCCO = [[20.5, -17.6], [36.2, -0.9]];
 
     function addTiles(map) {
-        const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd', maxZoom: 19
-        });
-        let errors = 0, loaded = 0, switched = false;
-        carto.on('tileload', () => { loaded++; });
-        carto.on('tileerror', () => {
-            errors++;
-            if (switched || loaded > 0 || errors < 3) return;
-            switched = true;
-            map.removeLayer(carto);
-            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
-            }).addTo(map);
-        });
-        carto.addTo(map);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
     }
 
     function colour(state) {

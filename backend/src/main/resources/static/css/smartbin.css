@@ -367,6 +367,8 @@ form.inline { display: inline; margin: 0; }
 
 .map { height: 440px; border-radius: 0 0 var(--radius-panel) var(--radius-panel); background: #dfe4de; }
 .map--inset { height: 300px; border-radius: var(--radius-control); border: 1px solid var(--line); }
+/* Greyscale basemap: on the map, colour only means fill state. */
+.leaflet-tile-pane { filter: grayscale(1) contrast(.92) brightness(1.05); }
 .map-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(23,32,27,.35); background: var(--c); }
 
 .fleet { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--empty); margin: 4px 0 14px; }

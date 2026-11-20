@@ -19,7 +19,12 @@
         .choice span { margin-top: auto; font-weight: 600; text-decoration: underline; }
         .foot { margin-top: 40px; color: var(--muted); font-size: 15px; }
         .landing .binwall { margin-top: 40px; max-width: 640px; }
-        @media (max-width: 760px) { .landing h1 { font-size: 40px; } .choices { grid-template-columns: 1fr; } }
+        .proto { margin-top: 56px; }
+        .proto h2 { font: 600 28px/1.15 var(--font-display); }
+        .proto > p { color: var(--muted); margin-top: 6px; max-width: 64ch; }
+        .photos { display: grid; grid-template-columns: 4fr 3fr 3fr; gap: 12px; margin-top: 18px; }
+        .photos img { width: 100%; height: 320px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+        @media (max-width: 760px) { .landing h1 { font-size: 40px; } .choices, .photos { grid-template-columns: 1fr; } .photos img { height: 260px; } }
     </style>
 </head>
 <body>
@@ -63,6 +68,16 @@
             <span>Ouvrir l'application</span>
         </a>
     </div>
+
+    <section class="proto" aria-labelledby="proto-title">
+        <h2 id="proto-title">Le prototype</h2>
+        <p>Arduino Uno avec capteur ultrason HC-SR04, GPS NEO-6M et module LoRa SX1278 à 433 MHz, monté sur un bac. La passerelle Heltec WiFi LoRa 32 V3 reçoit les mesures et les publie sur AWS IoT Core.</p>
+        <div class="photos">
+            <img src="hardware/sensor-node-breadboard.jpg" alt="Le nœud capteur câblé sur une plaque d'essai : Arduino, capteur ultrason, GPS et module LoRa" loading="lazy">
+            <img src="hardware/prototype-on-bin.jpg" alt="Le prototype monté sur le couvercle d'un bac" loading="lazy">
+            <img src="hardware/prototype-battery-antenna.jpg" alt="Vue du prototype avec la batterie et l'antenne LoRa" loading="lazy">
+        </div>
+    </section>
 
     <p class="foot">Données fictives, rien n'est enregistré. Projet de fin d'études, EST Fès. Pour la version complète avec le serveur Spring Boot, voir le <a href="https://github.com/Wirvxy/smartbin-iot">README</a>.</p>
 </main>
